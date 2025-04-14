@@ -1,0 +1,90 @@
+/* DMM/DLsite 購入管理システム カスタムスタイル */
+
+/* 全体のスタイル */
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+}
+
+/* ページタイトル */
+h1 {
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+/* カードのスタイル */
+.card {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-bottom: 1.5rem;
+}
+
+.card-header {
+  background-color: #f8f9fa;
+  font-weight: 500;
+}
+
+/* プラットフォームバッジ */
+.badge.bg-success {
+  background-color: #28a745 !important;
+}
+
+.badge.bg-info {
+  background-color: #17a2b8 !important;
+}
+
+/* 商品一覧カード */
+.card-img-top {
+  height: 180px;
+  object-fit: cover;
+}
+
+.card-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  min-height: 2.5rem;
+  font-size: 1rem;
+}
+
+/* テーブルのスタイル */
+.table th {
+  background-color: #f8f9fa;
+}
+
+/* フォームのスタイル */
+.form-label.required::after {
+  content: "*";
+  color: red;
+  margin-left: 0.25rem;
+}
+
+/* ダッシュボードのカード */
+.dashboard-card {
+  transition: transform 0.3s;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-5px);
+}
+
+/* フッター */
+footer {
+  margin-top: auto;
+  padding: 1rem 0;
+  font-size: 0.9rem;
+}
+
+/* メディアクエリ */
+@media (max-width: 768px) {
+  .card-img-top {
+    height: 140px;
+  }
+}

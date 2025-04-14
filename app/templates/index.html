@@ -1,0 +1,123 @@
+{% extends "layout.html" %}
+
+{% block title %}ホーム | DMM/DLsite 購入管理{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">DMM/DLsite 購入管理ダッシュボード</h1>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-center bg-primary text-white">
+            <div class="card-body">
+                <h5 class="card-title">総購入数</h5>
+                <h2 class="display-4">{{ stats.total_purchases }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center bg-success text-white">
+            <div class="card-body">
+                <h5 class="card-title">DMM購入数</h5>
+                <h2 class="display-4">{{ stats.dmm_count }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center bg-info text-white">
+            <div class="card-body">
+                <h5 class="card-title">DLsite購入数</h5>
+                <h2 class="display-4">{{ stats.dlsite_count }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>最近の購入履歴</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_purchases %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>購入日</th>
+                                <th>商品名</th>
+                                <th>プラットフォーム</th>
+                                <th>価格</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for purchase, product in recent_purchases %}
+                            <tr>
+                                <td>{{ purchase.purchased_date.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ product.title }}</td>
+                                <td>
+                                    {% if product.platform == 'dmm' %}
+                                    <span class="badge bg-success">DMM</span>
+                                    {% elif product.platform == 'dlsite' %}
+                                    <span class="badge bg-info">DLsite</span>
+                                    {% endif %}
+                                </td>
+                                <td>¥{{ purchase.purchased_price }}</td>
+                                <td>
+                                    <a href="{{ url_for('main.product_detail', id=product.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i> 詳細
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">まだ購入履歴はありません。</p>
+                {% endif %}
+                
+                <div class="mt-3">
+                    <a href="{{ url_for('main.purchase_list') }}" class="btn btn-primary">
+                        <i class="fas fa-list"></i> 全ての購入履歴を見る
+                    </a>
+                    <a href="{{ url_for('main.add_purchase') }}" class="btn btn-success">
+                        <i class="fas fa-plus"></i> 新しい購入履歴を追加
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>重複チェック</h5>
+            </div>
+            <div class="card-body">
+                <p>DMMとDLsiteで重複している可能性のある購入をチェックします。</p>
+                <a href="{{ url_for('main.check_duplicates') }}" class="btn btn-warning">
+                    <i class="fas fa-search"></i> 重複をチェック
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>商品追加</h5>
+            </div>
+            <div class="card-body">
+                <p>新しい商品情報を手動で追加します。</p>
+                <a href="{{ url_for('main.add_product') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> 商品を追加
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

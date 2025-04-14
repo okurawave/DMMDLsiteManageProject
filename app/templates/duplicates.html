@@ -1,0 +1,162 @@
+{% extends "layout.html" %}
+
+{% block title %}重複チェック | DMM/DLsite 購入管理{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">重複チェック</h1>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5>重複の可能性がある商品</h5>
+    </div>
+    <div class="card-body">
+        <p>
+            このページでは、DMMとDLsiteの両方で購入されている可能性のある商品を検出し、比較します。
+            重複の検出は、商品のタイトル類似性とメーカー/サークル名を基に行われます。
+        </p>
+
+        <button id="check-duplicates-btn" class="btn btn-warning mb-3">
+            <i class="fas fa-search"></i> 重複をチェック
+        </button>
+        
+        <div id="loading-indicator" style="display: none;">
+            <div class="d-flex align-items-center">
+                <strong>検索中...</strong>
+                <div class="spinner-border ms-auto" role="status" aria-hidden="true"></div>
+            </div>
+        </div>
+
+        {% if duplicates %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead class="table-light">
+                        <tr>
+                            <th>DMM商品</th>
+                            <th>DLsite商品</th>
+                            <th>類似度</th>
+                            <th>価格差</th>
+                            <th>アクション</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pair in duplicates %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('main.product_detail', id=pair.dmm_product.id) }}">
+                                        {{ pair.dmm_product.title }}
+                                    </a>
+                                    <br>
+                                    <small class="text-muted">{{ pair.dmm_product.maker }}</small>
+                                    <br>
+                                    <span class="fw-bold">¥{{ pair.dmm_product.price }}</span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('main.product_detail', id=pair.dlsite_product.id) }}">
+                                        {{ pair.dlsite_product.title }}
+                                    </a>
+                                    <br>
+                                    <small class="text-muted">{{ pair.dlsite_product.maker }}</small>
+                                    <br>
+                                    <span class="fw-bold">¥{{ pair.dlsite_product.price }}</span>
+                                </td>
+                                <td>
+                                    <div class="progress">
+                                        {% set similarity_percentage = pair.similarity * 100 %}
+                                        <div class="progress-bar bg-info" role="progressbar" 
+                                             style="width: {{ similarity_percentage }}%;" 
+                                             aria-valuenow="{{ similarity_percentage }}" 
+                                             aria-valuemin="0" aria-valuemax="100">
+                                            {{ similarity_percentage | round(1) }}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% set price_diff = pair.dmm_product.price - pair.dlsite_product.price %}
+                                    {% if price_diff > 0 %}
+                                        <span class="text-danger">DLsiteの方が {{ price_diff }}円安い</span>
+                                    {% elif price_diff < 0 %}
+                                        <span class="text-success">DMMの方が {{ price_diff * -1 }}円安い</span>
+                                    {% else %}
+                                        <span class="text-muted">同じ価格</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary compare-btn" 
+                                            data-dmm-id="{{ pair.dmm_product.id }}" 
+                                            data-dlsite-id="{{ pair.dlsite_product.id }}">
+                                        <i class="fas fa-exchange-alt"></i> 詳細比較
+                                    </button>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> 重複している可能性のある商品は見つかりませんでした。「重複をチェック」ボタンを押して検索を実行してください。
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 将来的に実装: 詳細比較モーダル -->
+<div class="modal fade" id="compareModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">商品詳細比較</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="border-bottom pb-2 mb-3">DMM商品</h6>
+                        <div id="dmm-product-details"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="border-bottom pb-2 mb-3">DLsite商品</h6>
+                        <div id="dlsite-product-details"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 重複チェックボタンの処理（フェーズ2で実装）
+        document.getElementById('check-duplicates-btn').addEventListener('click', function() {
+            // ローディングインジケータ表示
+            document.getElementById('loading-indicator').style.display = 'block';
+            
+            // 実際の実装はフェーズ2で追加予定
+            setTimeout(function() {
+                document.getElementById('loading-indicator').style.display = 'none';
+                alert('この機能はフェーズ2で実装予定です。');
+            }, 1000);
+        });
+        
+        // 詳細比較ボタンの処理（フェーズ2で実装）
+        document.querySelectorAll('.compare-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var dmmId = this.getAttribute('data-dmm-id');
+                var dlsiteId = this.getAttribute('data-dlsite-id');
+                
+                // フェーズ2での実装予定
+                alert('この機能はフェーズ2で実装予定です。DMM商品ID: ' + dmmId + ', DLsite商品ID: ' + dlsiteId);
+                
+                // モーダル表示（実際の内容はフェーズ2で実装）
+                //var compareModal = new bootstrap.Modal(document.getElementById('compareModal'));
+                //compareModal.show();
+            });
+        });
+    });
+</script>
+{% endblock %}

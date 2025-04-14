@@ -1,0 +1,133 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ product.title }} | DMM/DLsite 購入管理{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{{ url_for('main.product_list') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left"></i> 商品一覧に戻る
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        {% if product.thumbnail_url %}
+            <img src="{{ product.thumbnail_url }}" class="img-fluid rounded" alt="{{ product.title }}">
+        {% else %}
+            <div class="bg-light text-center py-5 rounded">
+                <i class="fas fa-image fa-5x text-muted"></i>
+            </div>
+        {% endif %}
+    </div>
+    <div class="col-md-8">
+        <h1 class="mb-3">{{ product.title }}</h1>
+        
+        <div class="mb-3">
+            {% if product.platform == 'dmm' %}
+                <span class="badge bg-success">DMM</span>
+            {% elif product.platform == 'dlsite' %}
+                <span class="badge bg-info">DLsite</span>
+            {% endif %}
+            <span class="badge bg-secondary">ID: {{ product.platform_id }}</span>
+        </div>
+        
+        <table class="table">
+            <tbody>
+                <tr>
+                    <th style="width: 30%">メーカー/サークル</th>
+                    <td>{{ product.maker }}</td>
+                </tr>
+                <tr>
+                    <th>価格</th>
+                    <td>
+                        {% if product.discount_price %}
+                            <span class="text-decoration-line-through text-muted">¥{{ product.price }}</span>
+                            <span class="text-danger fw-bold">¥{{ product.discount_price }}</span>
+                            <span class="badge bg-danger">
+                                {{ ((product.price - product.discount_price) / product.price * 100) | round | int }}% OFF
+                            </span>
+                        {% else %}
+                            <span class="fw-bold">¥{{ product.price }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <th>発売日</th>
+                    <td>{{ product.release_date.strftime('%Y-%m-%d') if product.release_date else '不明' }}</td>
+                </tr>
+                <tr>
+                    <th>カテゴリ</th>
+                    <td>{{ product.category or '-' }}</td>
+                </tr>
+                <tr>
+                    <th>最終更新日時</th>
+                    <td>{{ product.last_updated.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                </tr>
+                {% if purchase %}
+                <tr class="table-success">
+                    <th>購入状況</th>
+                    <td>
+                        <i class="fas fa-check-circle text-success"></i>
+                        {{ purchase.purchased_date.strftime('%Y-%m-%d') }}に購入済み
+                        (¥{{ purchase.purchased_price }})
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        
+        <div class="d-flex gap-2 mb-4">
+            {% if product.url %}
+                <a href="{{ product.url }}" target="_blank" class="btn btn-primary">
+                    <i class="fas fa-external-link-alt"></i> サイトで見る
+                </a>
+            {% endif %}
+            
+            {% if not purchase %}
+                <a href="{{ url_for('main.add_purchase') }}?product_id={{ product.id }}" class="btn btn-success">
+                    <i class="fas fa-cart-plus"></i> 購入履歴に追加
+                </a>
+            {% endif %}
+            
+            <!-- ここにウォッチリスト機能を後で追加 -->
+        </div>
+    </div>
+</div>
+
+{% if related_products %}
+<div class="mt-5">
+    <h3>同じメーカー/サークルの商品</h3>
+    <div class="row row-cols-1 row-cols-md-4 g-4">
+        {% for related in related_products %}
+            <div class="col">
+                <div class="card h-100">
+                    {% if related.thumbnail_url %}
+                        <img src="{{ related.thumbnail_url }}" class="card-img-top" alt="{{ related.title }}">
+                    {% else %}
+                        <div class="card-img-top bg-light text-center py-4">
+                            <i class="fas fa-image fa-2x text-muted"></i>
+                        </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ related.title }}</h5>
+                        <div class="d-flex justify-content-between">
+                            <span>
+                                {% if related.platform == 'dmm' %}
+                                    <span class="badge bg-success">DMM</span>
+                                {% elif related.platform == 'dlsite' %}
+                                    <span class="badge bg-info">DLsite</span>
+                                {% endif %}
+                            </span>
+                            <span class="fw-bold">¥{{ related.price }}</span>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <a href="{{ url_for('main.product_detail', id=related.id) }}" class="btn btn-sm btn-outline-primary">詳細</a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}
