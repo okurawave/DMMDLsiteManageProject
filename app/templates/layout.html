@@ -35,6 +35,29 @@
                     <li class="nav-item">
                         <a class="nav-link {% if request.path.startswith('/duplicates') %}active{% endif %}" href="{{ url_for('main.check_duplicates') }}">重複チェック</a>
                     </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% if '/scraper' in request.path %}active{% endif %}" href="#" id="scraperDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-search"></i> 商品検索
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="scraperDropdown">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('scraper.search') }}">
+                                    <i class="fas fa-search"></i> キーワード検索
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('scraper.bulk_search') }}">
+                                    <i class="fas fa-list-ol"></i> 一括検索
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('main.add_product') }}">
+                                    <i class="fas fa-plus-circle"></i> 手動追加
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
                 </ul>
                 <div class="d-flex">
                     <a href="{{ url_for('main.add_product') }}" class="btn btn-outline-light me-2">
