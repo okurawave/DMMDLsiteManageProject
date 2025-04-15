@@ -54,6 +54,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // フェーズ2で実装
         console.log('重複チェックの結果を更新');
     };
+    
+    // Bootstrapフォームバリデーションの初期化
+    initFormValidation();
+    
+    // 購入履歴フォームの表示/非表示の初期化
+    initPurchaseDetailsToggle();
 });
 
 /**
@@ -72,4 +78,36 @@ function debounce(func, wait, immediate) {
         timeout = setTimeout(later, wait);
         if (callNow) func.apply(context, args);
     };
+}
+
+/**
+ * Bootstrapフォームバリデーションの初期化
+ */
+function initFormValidation() {
+    'use strict';
+    var forms = document.querySelectorAll('.needs-validation');
+    Array.prototype.slice.call(forms)
+        .forEach(function(form) {
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+}
+
+/**
+ * 購入履歴フォームの表示/非表示切り替え
+ */
+function initPurchaseDetailsToggle() {
+    const addPurchaseCheckbox = document.getElementById('add_purchase');
+    const purchaseDetails = document.getElementById('purchase_details');
+    
+    if (addPurchaseCheckbox && purchaseDetails) {
+        addPurchaseCheckbox.addEventListener('change', function() {
+            purchaseDetails.style.display = this.checked ? 'block' : 'none';
+        });
+    }
 }

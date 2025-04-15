@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="mb-4">
-    <a href="{{ url_for('main.purchase_list') }}" class="btn btn-outline-secondary">
+    <a href="{{ url_for('purchase.purchase_list') }}" class="btn btn-outline-secondary">
         <i class="fas fa-arrow-left"></i> 購入履歴一覧に戻る
     </a>
 </div>
@@ -20,10 +20,10 @@
         </div>
         {% endif %}
 
-        <form action="{{ url_for('main.add_purchase') }}" method="post" class="needs-validation" novalidate>
+        <form action="{{ url_for('purchase.add_purchase') }}" method="post" class="needs-validation" novalidate>
             <div class="row mb-3">
                 <div class="col-md-12">
-                    <label for="product_id" class="form-label">商品 <span class="text-danger">*</span></label>
+                    <label for="product_id" class="form-label required">商品</label>
                     <select class="form-select" id="product_id" name="product_id" required>
                         <option value="" selected disabled>商品を選択してください</option>
                         {% for product in products %}
@@ -38,17 +38,18 @@
             
             <div class="row mb-3">
                 <div class="col-md-6">
-                    <label for="purchased_date" class="form-label">購入日 <span class="text-danger">*</span></label>
+                    <label for="purchased_date" class="form-label required">購入日</label>
                     <input type="date" class="form-control" id="purchased_date" name="purchase_date" required>
                     <div class="invalid-feedback">購入日を入力してください</div>
                 </div>
                 <div class="col-md-6">
-                    <label for="purchased_price" class="form-label">購入価格</label>
+                    <label for="purchased_price" class="form-label required">購入価格</label>
                     <div class="input-group">
                         <span class="input-group-text">¥</span>
-                        <input type="number" class="form-control" id="purchased_price" name="purchased_price" min="0">
+                        <input type="number" class="form-control" id="purchased_price" name="purchased_price" min="0" required>
                     </div>
-                    <small class="form-text text-muted">未入力の場合、商品の定価が使用されます</small>
+                    <div class="invalid-feedback">購入価格を入力してください</div>
+                    <small class="form-text text-muted">商品購入時の実際の金額を入力してください</small>
                 </div>
             </div>
             
@@ -73,7 +74,7 @@
                 <button type="submit" class="btn btn-success btn-lg">
                     <i class="fas fa-save"></i> 購入履歴を登録
                 </button>
-                <a href="{{ url_for('main.purchase_list') }}" class="btn btn-secondary btn-lg">
+                <a href="{{ url_for('purchase.purchase_list') }}" class="btn btn-secondary btn-lg">
                     <i class="fas fa-times"></i> キャンセル
                 </a>
             </div>
@@ -84,22 +85,6 @@
 
 {% block scripts %}
 <script>
-    // フォームのバリデーション
-    (function() {
-        'use strict'
-        var forms = document.querySelectorAll('.needs-validation')
-        Array.prototype.slice.call(forms)
-            .forEach(function(form) {
-                form.addEventListener('submit', function(event) {
-                    if (!form.checkValidity()) {
-                        event.preventDefault()
-                        event.stopPropagation()
-                    }
-                    form.classList.add('was-validated')
-                }, false)
-            })
-    })();
-    
     // 現在の日付をデフォルトに設定
     document.addEventListener('DOMContentLoaded', function() {
         var today = new Date().toISOString().split('T')[0];

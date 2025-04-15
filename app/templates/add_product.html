@@ -23,7 +23,7 @@
         <form action="{{ url_for('main.add_product') }}" method="post" class="needs-validation" novalidate>
             <div class="row mb-3">
                 <div class="col-md-12">
-                    <label for="title" class="form-label">タイトル <span class="text-danger">*</span></label>
+                    <label for="title" class="form-label required">タイトル</label>
                     <input type="text" class="form-control" id="title" name="title" required>
                     <div class="invalid-feedback">タイトルは必須です</div>
                 </div>
@@ -31,7 +31,7 @@
             
             <div class="row mb-3">
                 <div class="col-md-6">
-                    <label for="platform" class="form-label">プラットフォーム <span class="text-danger">*</span></label>
+                    <label for="platform" class="form-label required">プラットフォーム</label>
                     <select class="form-select" id="platform" name="platform" required>
                         <option value="" selected disabled>選択してください</option>
                         <option value="dmm">DMM</option>
@@ -40,7 +40,7 @@
                     <div class="invalid-feedback">プラットフォームを選択してください</div>
                 </div>
                 <div class="col-md-6">
-                    <label for="platform_id" class="form-label">プラットフォームでのID <span class="text-danger">*</span></label>
+                    <label for="platform_id" class="form-label required">プラットフォームでのID</label>
                     <input type="text" class="form-control" id="platform_id" name="platform_id" required>
                     <div class="invalid-feedback">プラットフォームIDは必須です</div>
                     <small class="form-text text-muted">DMMの商品コードやDLsiteのRJコード</small>
@@ -49,7 +49,7 @@
             
             <div class="row mb-3">
                 <div class="col-md-6">
-                    <label for="price" class="form-label">価格 <span class="text-danger">*</span></label>
+                    <label for="price" class="form-label required">価格</label>
                     <div class="input-group">
                         <span class="input-group-text">¥</span>
                         <input type="number" class="form-control" id="price" name="price" min="0" required>
@@ -124,26 +124,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
-    // フォームのバリデーション
-    (function() {
-        'use strict'
-        var forms = document.querySelectorAll('.needs-validation')
-        Array.prototype.slice.call(forms)
-            .forEach(function(form) {
-                form.addEventListener('submit', function(event) {
-                    if (!form.checkValidity()) {
-                        event.preventDefault()
-                        event.stopPropagation()
-                    }
-                    form.classList.add('was-validated')
-                }, false)
-            })
-    })();
-    
-    // 購入履歴フォームの表示/非表示
-    document.getElementById('add_purchase').addEventListener('change', function() {
-        document.getElementById('purchase_details').style.display = this.checked ? 'block' : 'none';
-    });
-</script>
+<!-- 共通のフォームバリデーションロジックがscript.jsに移動したため、ページ固有のJSのみ残す -->
 {% endblock %}

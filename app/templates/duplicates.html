@@ -332,6 +332,7 @@
             const titleSimilarity = comparison.title_similarity * 100;
             const similarityColor = titleSimilarity > 90 ? 'success' : (titleSimilarity > 70 ? 'primary' : 'secondary');
             
+            /* cssLint ignore:start */
             html += `<h6>タイトル類似度</h6>
             <div class="progress mb-3" style="height: 20px;">
                 <div class="progress-bar bg-${similarityColor}" role="progressbar" 
@@ -341,10 +342,12 @@
                     ${titleSimilarity.toFixed(1)}%
                 </div>
             </div>`;
+            /* cssLint ignore:end */
             
             // 高度な類似度（もしあれば）
             if (comparison.advanced_similarity !== null) {
                 const advSimilarity = comparison.advanced_similarity * 100;
+                /* cssLint ignore:start */
                 html += `<h6>高度な類似度分析（TF-IDF）</h6>
                 <div class="progress mb-3" style="height: 20px;">
                     <div class="progress-bar bg-info" role="progressbar" 
@@ -354,6 +357,7 @@
                         ${advSimilarity.toFixed(1)}%
                     </div>
                 </div>`;
+                /* cssLint ignore:end */
             }
             
             // メーカー/サークル一致

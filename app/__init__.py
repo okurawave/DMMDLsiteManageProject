@@ -21,9 +21,13 @@ def create_app(config=None):
     # Blueprintsの登録
     from app.controllers.main_controller import main_bp
     from app.controllers.scraper_controller import scraper_bp
+    from app.controllers.product_controller import product_bp
+    from app.controllers.purchase_controller import purchase_bp
     
     app.register_blueprint(main_bp)
     app.register_blueprint(scraper_bp)
+    app.register_blueprint(product_bp)
+    app.register_blueprint(purchase_bp)
     
     # エラーハンドラの登録
     @app.errorhandler(404)
