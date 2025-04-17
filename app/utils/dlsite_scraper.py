@@ -1,260 +1,271 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import re
 import logging
-import urllib.parse
-from datetime import datetime
-from typing import Dict, List, Optional, Any, Union
-
+import re
+import json
+from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
-from .scraper_base import ScraperBase
+from app.utils.scraper_base import ScraperBase
 
 logger = logging.getLogger(__name__)
 
 class DlsiteScraper(ScraperBase):
-    """
-    DLsiteサイトから商品情報をスクレイピングするクラス
-    """
+    """DLsiteのスクレイピングを行うクラス"""
     
-    BASE_URL = "https://www.dlsite.com"
-    SEARCH_URL = "https://www.dlsite.com/maniax/fsr/=/language/jp/keyword/{}/age_category%5B0%5D/general/"
-    PRODUCT_URL = "https://www.dlsite.com/maniax/work/=/product_id/{}"
+    LOGIN_URL = "https://login.dlsite.com/login"
+    PURCHASE_HISTORY_URL = "https://play.dlsite.com/mypage/purchasehistory"
+    SEARCH_URL = "https://www.dlsite.com/maniax/fsr/=/language/jp/keyword/{keyword}/order/trend/"
+    PRODUCT_URL = "https://www.dlsite.com/maniax/work/=/product_id/{product_id}/"
     
-    def __init__(self, delay: float = 1.5, timeout: int = 15, max_retries: int = 3):
-        """
-        Parameters
-        ----------
-        delay: float
-            リクエスト間の遅延（秒）
-        timeout: int
-            リクエストのタイムアウト（秒）
-        max_retries: int
-            リクエストの最大リトライ回数
-        """
-        super().__init__(delay=delay, timeout=timeout, max_retries=max_retries)
-    
-    def search_products(self, keyword: str, max_items: int = 20) -> List[Dict[str, Any]]:
-        """
-        キーワードでDLsiteの商品を検索する
-        
-        Parameters
-        ----------
-        keyword: str
-            検索キーワード
-        max_items: int
-            取得する最大アイテム数
+    async def authenticate(self, username, password):
+        """DLsiteへのログイン処理"""
+        try:
+            # ログインページに移動
+            await self.page.goto(self.LOGIN_URL)
             
-        Returns
-        -------
-        List[Dict[str, Any]]
-            検索結果の商品リスト
-        """
-        logger.info(f"DLsiteで検索: キーワード '{keyword}', 最大アイテム数 {max_items}")
-        
-        # URLエンコード
-        encoded_keyword = urllib.parse.quote(keyword)
-        search_url = self.SEARCH_URL.format(encoded_keyword)
-        
+            # ユーザー名とパスワードを入力
+            await self.page.fill('input[name="login_id"]', username)
+            await self.page.fill('input[name="password"]', password)
+            
+            # ログインボタンをクリック
+            await self.page.click('button[name="submit"]')
+            
+            # ログイン後のリダイレクトを待つ
+            await self.page.wait_for_load_state('networkidle')
+            
+            # ログインの成功を確認（マイページへのリンクがあるか）
+            my_page_link = await self.page.query_selector('a[href*="dlsite.com/mypage"]')
+            
+            if my_page_link:
+                logger.info("DLsiteへのログインに成功しました")
+                return True
+            else:
+                logger.warning("DLsiteへのログインに失敗しました")
+                return False
+                
+        except Exception as e:
+            logger.error(f"認証中にエラーが発生しました: {e}")
+            return False
+    
+    async def search_products(self, keyword, max_items=10):
+        """キーワードによる商品検索"""
         results = []
-        page_num = 1
-        
-        # 検索結果ページを解析
-        while len(results) < max_items:
-            # ページネーションに対応（必要に応じてURLを調整）
-            page_url = search_url
-            if page_num > 1:
-                page_url += f"&page={page_num}"
-            
-            soup = self._get_page(page_url)
-            items = self._parse_search_results(soup)
-            
-            if not items:
-                # これ以上アイテムがなければ終了
-                logger.info(f"検索結果がこれ以上ありません。ページ {page_num}")
-                break
-                
-            results.extend(items[:max_items - len(results)])
-            
-            if len(items) < 20:  # 1ページの最大表示数より少なければ次のページはない
-                break
-                
-            page_num += 1
-            
-        logger.info(f"DLsiteで {len(results)} アイテムを取得しました")
-        return results[:max_items]
-    
-    def _parse_search_results(self, soup: BeautifulSoup) -> List[Dict[str, Any]]:
-        """
-        検索結果ページから商品情報を抽出する
-        
-        Parameters
-        ----------
-        soup: BeautifulSoup
-            検索結果ページのBeautifulSoupオブジェクト
-            
-        Returns
-        -------
-        List[Dict[str, Any]]
-            解析された商品リスト
-        """
-        items = []
         try:
-            # DLsite検索結果の商品要素を抽出
-            # 注: このセレクタはDLsiteサイトの構造変更に応じて更新が必要
-            product_elements = soup.select('.n_worklist_item')
+            search_url = self.SEARCH_URL.format(keyword=keyword)
+            await self.page.goto(search_url)
+            await self.page.wait_for_load_state('networkidle')
             
-            for element in product_elements:
+            # 検索結果の商品要素を取得
+            items = await self.page.query_selector_all('.n_worklist li.search_result_img_box_inner')
+            
+            count = 0
+            for item in items:
+                if count >= max_items:
+                    break
+                
                 try:
-                    # 商品IDを抽出
-                    product_id = None
-                    for class_name in element.get('class', []):
-                        if class_name.startswith('_'):
-                            product_id = class_name[1:]  # '_RJ123456' から 'RJ123456' を抽出
-                            break
+                    # 商品情報を抽出
+                    title_element = await item.query_selector('.work_name a')
+                    title = await title_element.inner_text() if title_element else "不明"
                     
-                    if not product_id:
-                        continue
+                    link_element = await item.query_selector('.work_name a')
+                    url = await link_element.get_attribute('href') if link_element else ""
                     
-                    # 商品URLを生成
-                    url = self.PRODUCT_URL.format(product_id)
+                    # URLから商品IDを抽出
+                    platform_id = None
+                    if url:
+                        match = re.search(r'product_id/([^/]+)', url)
+                        if match:
+                            platform_id = match.group(1)
                     
-                    # タイトルを抽出
-                    title_element = element.select_one('.work_name a')
-                    title = title_element.get_text(strip=True) if title_element else "タイトル不明"
+                    # 価格情報を取得
+                    price_element = await item.query_selector('.work_price')
+                    price_text = await price_element.inner_text() if price_element else ""
+                    price = None
+                    if price_text:
+                        price_match = re.search(r'([\d,]+)円', price_text)
+                        if price_match:
+                            price = int(price_match.group(1).replace(',', ''))
                     
-                    # サムネイル画像を抽出
-                    img_element = element.select_one('.work_thumb img')
-                    thumbnail_url = None
-                    if img_element:
-                        thumbnail_url = img_element.get('src') or img_element.get('data-src')
+                    # サムネイル画像
+                    thumbnail_element = await item.query_selector('img.lazy')
+                    thumbnail_url = await thumbnail_element.get_attribute('data-src') if thumbnail_element else None
                     
-                    # 価格を抽出
-                    price_element = element.select_one('.work_price')
-                    price_text = price_element.get_text(strip=True) if price_element else None
-                    price = self.normalize_price(price_text)
+                    # メーカー情報
+                    maker_element = await item.query_selector('.maker_name a')
+                    maker = await maker_element.inner_text() if maker_element else "不明"
                     
-                    # セール価格を抽出
-                    discount_price = None
-                    discount_element = element.select_one('.work_price.discount')
-                    if discount_element:
-                        original_price_element = element.select_one('.work_price.strike')
-                        if original_price_element:
-                            original_price_text = original_price_element.get_text(strip=True)
-                            original_price = self.normalize_price(original_price_text)
-                            # セール中の場合、通常価格とセール価格を設定
-                            discount_price = price
-                            price = original_price
-                    
-                    # メーカー/サークル名を抽出
-                    maker_element = element.select_one('.maker_name a')
-                    maker = maker_element.get_text(strip=True) if maker_element else None
-                    
-                    items.append({
-                        'platform': 'dlsite',
-                        'platform_id': product_id,
-                        'title': title,
-                        'url': url,
-                        'thumbnail_url': thumbnail_url,
-                        'price': price,
-                        'discount_price': discount_price,
-                        'maker': maker
-                    })
-                    
+                    if platform_id:
+                        product_data = {
+                            'platform': 'dlsite',
+                            'platform_id': platform_id,
+                            'title': title,
+                            'maker': maker,
+                            'price': price,
+                            'url': url,
+                            'thumbnail_url': thumbnail_url
+                        }
+                        results.append(product_data)
+                        count += 1
+                
                 except Exception as e:
-                    logger.error(f"商品要素の解析中にエラーが発生しました: {str(e)}")
+                    logger.error(f"商品情報の抽出中にエラーが発生しました: {e}")
                     continue
-                    
-        except Exception as e:
-            logger.error(f"検索結果の解析中にエラーが発生しました: {str(e)}")
-        
-        return items
-    
-    def get_product_details(self, product_id: str) -> Dict[str, Any]:
-        """
-        DLsiteの商品詳細情報を取得する
-        
-        Parameters
-        ----------
-        product_id: str
-            商品ID（例：RJ123456）
             
-        Returns
-        -------
-        Dict[str, Any]
-            商品の詳細情報
-        """
-        logger.info(f"DLsiteの商品詳細を取得: 商品ID '{product_id}'")
-        
-        url = self.PRODUCT_URL.format(product_id)
-        soup = self._get_page(url)
-        
-        details = {
-            'platform': 'dlsite',
-            'platform_id': product_id,
-            'url': url
-        }
+            return results
+            
+        except Exception as e:
+            logger.error(f"商品検索中にエラーが発生しました: {e}")
+            return []
+    
+    async def get_product_details(self, product_id):
+        """商品詳細情報の取得"""
+        try:
+            product_url = self.PRODUCT_URL.format(product_id=product_id)
+            await self.page.goto(product_url)
+            await self.page.wait_for_load_state('networkidle')
+            
+            # タイトル
+            title_element = await self.page.query_selector('.work_name')
+            title = await title_element.inner_text() if title_element else "不明"
+            
+            # メーカー
+            maker_element = await self.page.query_selector('span.maker_name a')
+            maker = await maker_element.inner_text() if maker_element else "不明"
+            
+            # 価格
+            price_element = await self.page.query_selector('strong.work_price')
+            price_text = await price_element.inner_text() if price_element else ""
+            price = None
+            if price_text:
+                price_match = re.search(r'([\d,]+)円', price_text)
+                if price_match:
+                    price = int(price_match.group(1).replace(',', ''))
+            
+            # サムネイル画像
+            thumbnail_element = await self.page.query_selector('.product-slider-data meta[property="og:image"]')
+            thumbnail_url = await thumbnail_element.get_attribute('content') if thumbnail_element else None
+            
+            # 発売日
+            release_element = await self.page.query_selector('table.work_detail tr:has(th:text-is("販売日")) td')
+            release_date_text = await release_element.inner_text() if release_element else ""
+            release_date = None
+            if release_date_text:
+                try:
+                    release_date = datetime.strptime(release_date_text, '%Y年%m月%d日').strftime('%Y-%m-%d')
+                except:
+                    pass
+            
+            # 商品情報をまとめる
+            product_data = {
+                'platform': 'dlsite',
+                'platform_id': product_id,
+                'title': title,
+                'maker': maker,
+                'price': price,
+                'url': product_url,
+                'thumbnail_url': thumbnail_url,
+                'release_date': release_date
+            }
+            
+            return product_data
+            
+        except Exception as e:
+            logger.error(f"商品詳細の取得中にエラーが発生しました: {e}")
+            return None
+    
+    async def get_purchase_history(self, start_date=None, end_date=None, max_pages=1):
+        """購入履歴の取得"""
+        purchase_history = []
         
         try:
-            # タイトルの取得
-            title_element = soup.select_one('#work_name')
-            if title_element:
-                details['title'] = title_element.get_text(strip=True)
+            # 購入履歴ページに移動
+            await self.page.goto(self.PURCHASE_HISTORY_URL)
+            await self.page.wait_for_load_state('networkidle')
             
-            # 画像URLの取得
-            img_element = soup.select_one('.product-slider-data img')
-            if img_element and (img_src := img_element.get('src') or img_element.get('data-src')):
-                details['thumbnail_url'] = img_src
+            # ログイン状態の確認
+            if "login" in self.page.url:
+                logger.error("DLsite: ログインが必要です")
+                return []
+            
+            page_count = 0
+            has_next = True
+            
+            while has_next and page_count < max_pages:
+                # 購入履歴の各アイテムを取得
+                items = await self.page.query_selector_all('.dl_item')
                 
-            # 価格情報の取得
-            price_element = soup.select_one('.work_price')
-            if price_element:
-                price_text = price_element.get_text(strip=True)
-                details['price'] = self.normalize_price(price_text)
-                
-            # セール価格の取得
-            discount_element = soup.select_one('.work_price.discount')
-            if discount_element:
-                discount_price_text = discount_element.get_text(strip=True)
-                original_price_element = soup.select_one('.work_price.strike')
-                if original_price_element:
-                    original_price_text = original_price_element.get_text(strip=True)
-                    details['price'] = self.normalize_price(original_price_text)
-                    details['discount_price'] = self.normalize_price(discount_price_text)
+                for item in items:
+                    try:
+                        # 購入日
+                        date_element = await item.query_selector('.dl_date')
+                        purchase_date_text = await date_element.inner_text() if date_element else ""
+                        purchase_date = None
+                        if purchase_date_text:
+                            # 例: 2023/04/17
+                            purchase_date = datetime.strptime(purchase_date_text, '%Y/%m/%d').strftime('%Y-%m-%d')
+                        
+                        # 日付範囲でフィルタリング
+                        if start_date and purchase_date and purchase_date < start_date:
+                            continue
+                        if end_date and purchase_date and purchase_date > end_date:
+                            continue
+                        
+                        # タイトル
+                        title_element = await item.query_selector('.dl_work a')
+                        title = await title_element.inner_text() if title_element else "不明"
+                        
+                        # URL
+                        url = await title_element.get_attribute('href') if title_element else ""
+                        
+                        # プラットフォームID抽出
+                        platform_id = None
+                        if url:
+                            match = re.search(r'product_id/([^/]+)', url)
+                            if match:
+                                platform_id = match.group(1)
+                        
+                        # 価格
+                        price_element = await item.query_selector('.dl_price')
+                        price_text = await price_element.inner_text() if price_element else ""
+                        price = None
+                        if price_text:
+                            price_match = re.search(r'([\d,]+)円', price_text)
+                            if price_match:
+                                price = int(price_match.group(1).replace(',', ''))
+                        
+                        # メーカー
+                        maker_element = await item.query_selector('.dl_maker a')
+                        maker = await maker_element.inner_text() if maker_element else "不明"
+                        
+                        if platform_id:
+                            purchase_data = {
+                                'platform': 'dlsite',
+                                'platform_id': platform_id,
+                                'title': title,
+                                'maker': maker,
+                                'price': price,
+                                'url': url,
+                                'purchase_date': purchase_date
+                            }
+                            purchase_history.append(purchase_data)
                     
-            # メーカー/サークル名の取得
-            maker_element = soup.select_one('.maker_name a')
-            if maker_element:
-                details['maker'] = maker_element.get_text(strip=True)
+                    except Exception as e:
+                        logger.error(f"購入履歴の抽出中にエラーが発生しました: {e}")
+                        continue
                 
-            # 発売日の取得
-            # DLsiteの発売日表記例：「販売日：2023年01月01日」
-            date_element = soup.select_one('#work_outline tr:contains("販売日") td')
-            if date_element:
-                date_text = date_element.get_text(strip=True)
-                date_match = re.search(r'(\d{4})年(\d{1,2})月(\d{1,2})日', date_text)
-                if date_match:
-                    year = int(date_match.group(1))
-                    month = int(date_match.group(2))
-                    day = int(date_match.group(3))
-                    details['release_date'] = datetime(year, month, day).date().isoformat()
+                # 次のページがあるか確認
+                next_button = await self.page.query_selector('a.btn_next:not(.disabled)')
+                if next_button and page_count < max_pages - 1:
+                    await next_button.click()
+                    await self.page.wait_for_load_state('networkidle')
+                    page_count += 1
+                else:
+                    has_next = False
             
-            # カテゴリの取得
-            category_elements = soup.select('#work_outline tr:contains("ジャンル") td a')
-            if category_elements:
-                details['category'] = [elem.get_text(strip=True) for elem in category_elements]
-            
-            # ファイル形式の取得
-            file_type_element = soup.select_one('#work_outline tr:contains("ファイル形式") td')
-            if file_type_element:
-                details['file_type'] = file_type_element.get_text(strip=True)
-                
-            # ファイルサイズの取得
-            file_size_element = soup.select_one('#work_outline tr:contains("ファイル容量") td')
-            if file_size_element:
-                details['file_size'] = file_size_element.get_text(strip=True)
+            return purchase_history
             
         except Exception as e:
-            logger.error(f"商品詳細の解析中にエラーが発生しました: {str(e)}")
-        
-        return details
+            logger.error(f"購入履歴の取得中にエラーが発生しました: {e}")
+            return []

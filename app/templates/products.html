@@ -5,7 +5,7 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>商品一覧</h1>
-    <a href="{{ url_for('main.add_product') }}" class="btn btn-primary">
+    <a href="{{ url_for('product.add_product') }}" class="btn btn-primary">
         <i class="fas fa-plus"></i> 商品を追加
     </a>
 </div>
@@ -13,7 +13,7 @@
 <!-- 検索・フィルタフォーム -->
 <div class="card mb-4">
     <div class="card-body">
-        <form action="{{ url_for('main.product_list') }}" method="get" class="row g-3">
+        <form action="{{ url_for('product.product_list') }}" method="get" class="row g-3">
             <div class="col-md-6">
                 <label for="search" class="form-label">検索</label>
                 <input type="text" id="search" name="q" class="form-control" placeholder="タイトルまたはメーカー名で検索" value="{{ search_query }}">
@@ -39,7 +39,7 @@
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-search"></i> 検索
                 </button>
-                <a href="{{ url_for('main.product_list') }}" class="btn btn-secondary">
+                <a href="{{ url_for('product.product_list') }}" class="btn btn-secondary">
                     <i class="fas fa-redo"></i> リセット
                 </a>
             </div>
@@ -82,7 +82,7 @@
                         </div>
                     </div>
                     <div class="card-footer">
-                        <a href="{{ url_for('main.product_detail', id=product.id) }}" class="btn btn-sm btn-outline-primary">
+                        <a href="{{ url_for('product.product_detail', id=product.id) }}" class="btn btn-sm btn-outline-primary">
                             <i class="fas fa-eye"></i> 詳細
                         </a>
                         <a href="{{ product.url }}" target="_blank" class="btn btn-sm btn-outline-secondary">
@@ -99,7 +99,7 @@
         <ul class="pagination justify-content-center">
             {% if products.has_prev %}
                 <li class="page-item">
-                    <a class="page-link" href="{{ url_for('main.product_list', page=products.prev_num, q=search_query, platform=platform, sort=sort_by) }}">前へ</a>
+                    <a class="page-link" href="{{ url_for('product.product_list', page=products.prev_num, q=search_query, platform=platform, sort=sort_by) }}">前へ</a>
                 </li>
             {% else %}
                 <li class="page-item disabled">
@@ -111,11 +111,11 @@
                 {% if page_num %}
                     {% if page_num == products.page %}
                         <li class="page-item active">
-                            <a class="page-link" href="{{ url_for('main.product_list', page=page_num, q=search_query, platform=platform, sort=sort_by) }}">{{ page_num }}</a>
+                            <a class="page-link" href="{{ url_for('product.product_list', page=page_num, q=search_query, platform=platform, sort=sort_by) }}">{{ page_num }}</a>
                         </li>
                     {% else %}
                         <li class="page-item">
-                            <a class="page-link" href="{{ url_for('main.product_list', page=page_num, q=search_query, platform=platform, sort=sort_by) }}">{{ page_num }}</a>
+                            <a class="page-link" href="{{ url_for('product.product_list', page=page_num, q=search_query, platform=platform, sort=sort_by) }}">{{ page_num }}</a>
                         </li>
                     {% endif %}
                 {% else %}
@@ -127,7 +127,7 @@
 
             {% if products.has_next %}
                 <li class="page-item">
-                    <a class="page-link" href="{{ url_for('main.product_list', page=products.next_num, q=search_query, platform=platform, sort=sort_by) }}">次へ</a>
+                    <a class="page-link" href="{{ url_for('product.product_list', page=products.next_num, q=search_query, platform=platform, sort=sort_by) }}">次へ</a>
                 </li>
             {% else %}
                 <li class="page-item disabled">

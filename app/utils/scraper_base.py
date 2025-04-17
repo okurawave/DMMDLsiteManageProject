@@ -1,153 +1,139 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import abc
+import asyncio
 import logging
-import time
-import requests
-from bs4 import BeautifulSoup
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
-from typing import Dict, List, Optional, Any, Union
+from abc import ABC, abstractmethod
+from playwright.async_api import async_playwright
 
-# ロガーの設定
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-class ScraperBase(abc.ABC):
-    """
-    スクレイパーの基底クラス。
-    DMMとDLsiteのスクレイパーに共通する機能を提供する。
-    """
+class ScraperBase(ABC):
+    """スクレイパーの基底クラス"""
     
-    def __init__(self, delay: float = 1.0, timeout: int = 10, max_retries: int = 3):
-        """
-        Parameters
-        ----------
-        delay: float
-            リクエスト間の遅延（秒）。サイトに負荷をかけすぎないため。
-        timeout: int
-            リクエストのタイムアウト（秒）
-        max_retries: int
-            リクエストの最大リトライ回数
-        """
-        self.delay = delay
-        self.timeout = timeout
-        self.max_retries = max_retries
-        self.last_request_time = 0
-        
-        # セッション設定
-        self.session = requests.Session()
-        retries = Retry(
-            total=max_retries,
-            backoff_factor=0.5,
-            status_forcelist=[500, 502, 503, 504]
-        )
-        self.session.mount('http://', HTTPAdapter(max_retries=retries))
-        self.session.mount('https://', HTTPAdapter(max_retries=retries))
-        
-        # ユーザーエージェントの設定
-        self.headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            'Accept-Language': 'ja-JP,ja;q=0.9,en-US;q=0.8,en;q=0.7',
-        }
-
-    def _get_page(self, url: str) -> BeautifulSoup:
-        """
-        指定されたURLからHTMLを取得し、BeautifulSoupオブジェクトを返す
-        
-        Parameters
-        ----------
-        url: str
-            取得するURL
-            
-        Returns
-        -------
-        BeautifulSoup
-            解析されたHTMLコンテンツ
-        """
-        # レート制限を守るための遅延
-        current_time = time.time()
-        if current_time - self.last_request_time < self.delay:
-            time.sleep(self.delay - (current_time - self.last_request_time))
-        
+    def __init__(self):
+        self.authenticated = False
+        self.browser = None
+        self.context = None
+        self.page = None
+    
+    async def initialize_browser(self, headless=True):
+        """Playwrightブラウザを初期化する"""
         try:
-            logger.info(f"GETリクエスト送信: {url}")
-            response = self.session.get(
-                url, 
-                headers=self.headers, 
-                timeout=self.timeout
+            playwright = await async_playwright().start()
+            self.browser = await playwright.chromium.launch(headless=headless)
+            self.context = await self.browser.new_context(
+                viewport={"width": 1280, "height": 800},
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36"
             )
-            self.last_request_time = time.time()
-            
-            response.raise_for_status()  # 200 OK以外のステータスコードでエラーを発生させる
-            logger.info(f"リクエスト成功: {url}, ステータスコード: {response.status_code}")
-            
-            # HTMLの解析
-            return BeautifulSoup(response.content, 'html.parser')
-            
-        except requests.exceptions.RequestException as e:
-            logger.error(f"リクエスト中にエラーが発生しました: {url}, エラー: {str(e)}")
-            raise
+            self.page = await self.context.new_page()
+            # ダウンロードを待つための設定
+            await self.page.set_default_timeout(30000)  # タイムアウトを30秒に設定
+            return True
+        except Exception as e:
+            logger.error(f"ブラウザの初期化中にエラーが発生しました: {e}")
+            return False
     
-    @abc.abstractmethod
-    def search_products(self, keyword: str, max_items: int = 20) -> List[Dict[str, Any]]:
-        """
-        キーワードで商品を検索する
-        
-        Parameters
-        ----------
-        keyword: str
-            検索キーワード
-        max_items: int
-            取得する最大アイテム数
-            
-        Returns
-        -------
-        List[Dict[str, Any]]
-            検索結果の商品リスト
-        """
-        pass
-    
-    @abc.abstractmethod
-    def get_product_details(self, product_id: str) -> Dict[str, Any]:
-        """
-        商品の詳細情報を取得する
-        
-        Parameters
-        ----------
-        product_id: str
-            商品ID
-            
-        Returns
-        -------
-        Dict[str, Any]
-            商品の詳細情報
-        """
-        pass
-    
-    def normalize_price(self, price_text: str) -> Optional[int]:
-        """
-        価格テキストを正規化して整数値に変換する
-        
-        Parameters
-        ----------
-        price_text: str
-            価格テキスト（例: "¥1,200" や "1,200円"）
-            
-        Returns
-        -------
-        Optional[int]
-            正規化された価格（整数）、変換できない場合はNone
-        """
-        if not price_text:
-            return None
-            
-        # 不要な文字を削除
-        cleaned = price_text.replace('¥', '').replace('￥', '').replace(',', '').replace('円', '').strip()
-        
+    async def close_browser(self):
+        """ブラウザを閉じる"""
         try:
-            return int(cleaned)
-        except ValueError:
-            logger.warning(f"価格の変換に失敗しました: {price_text}")
+            if self.browser:
+                await self.browser.close()
+                self.browser = None
+                self.context = None
+                self.page = None
+        except Exception as e:
+            logger.error(f"ブラウザの終了中にエラーが発生しました: {e}")
+    
+    @abstractmethod
+    async def authenticate(self, username, password):
+        """認証（ログイン）処理"""
+        pass
+    
+    @abstractmethod
+    async def search_products(self, keyword, max_items=10):
+        """商品検索"""
+        pass
+    
+    @abstractmethod
+    async def get_product_details(self, product_id):
+        """商品詳細取得"""
+        pass
+    
+    @abstractmethod
+    async def get_purchase_history(self, start_date=None, end_date=None, max_pages=1):
+        """購入履歴取得"""
+        pass
+    
+    def run_async(self, coro):
+        """非同期関数を同期的に実行するためのヘルパーメソッド"""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(coro)
+    
+    # 同期的なインターフェースを提供するためのラッパーメソッド
+    def authenticate(self, username, password):
+        """認証（ログイン）処理の同期ラッパー"""
+        return self.run_async(self._authenticate(username, password))
+    
+    def search_products(self, keyword, max_items=10):
+        """商品検索の同期ラッパー"""
+        return self.run_async(self._search_products(keyword, max_items))
+    
+    def get_product_details(self, product_id):
+        """商品詳細取得の同期ラッパー"""
+        return self.run_async(self._get_product_details(product_id))
+    
+    def get_purchase_history(self, start_date=None, end_date=None, max_pages=1):
+        """購入履歴取得の同期ラッパー"""
+        return self.run_async(self._get_purchase_history(start_date, end_date, max_pages))
+    
+    # 非同期メソッドの実装
+    async def _authenticate(self, username, password):
+        """認証（ログイン）処理の非同期実装"""
+        await self.initialize_browser()
+        try:
+            authenticated = await self.authenticate(username, password)
+            self.authenticated = authenticated
+            return authenticated
+        except Exception as e:
+            logger.error(f"認証中にエラーが発生しました: {e}")
+            return False
+        finally:
+            await self.close_browser()
+    
+    async def _search_products(self, keyword, max_items=10):
+        """商品検索の非同期実装"""
+        if not await self.initialize_browser():
+            return []
+        try:
+            return await self.search_products(keyword, max_items)
+        except Exception as e:
+            logger.error(f"商品検索中にエラーが発生しました: {e}")
+            return []
+        finally:
+            await self.close_browser()
+    
+    async def _get_product_details(self, product_id):
+        """商品詳細取得の非同期実装"""
+        if not await self.initialize_browser():
             return None
+        try:
+            return await self.get_product_details(product_id)
+        except Exception as e:
+            logger.error(f"商品詳細取得中にエラーが発生しました: {e}")
+            return None
+        finally:
+            await self.close_browser()
+    
+    async def _get_purchase_history(self, start_date=None, end_date=None, max_pages=1):
+        """購入履歴取得の非同期実装"""
+        if not await self.initialize_browser():
+            return []
+        try:
+            return await self.get_purchase_history(start_date, end_date, max_pages)
+        except Exception as e:
+            logger.error(f"購入履歴取得中にエラーが発生しました: {e}")
+            return []
+        finally:
+            await self.close_browser()

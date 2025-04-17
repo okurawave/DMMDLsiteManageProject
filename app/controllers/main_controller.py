@@ -66,136 +66,48 @@ def check_duplicates():
     use_tfidf = request.args.get('algo', 'tfidf') == 'tfidf'
     use_circle = request.args.get('use_circle', 'true') == 'true'
     
-    # 既存のシンプルな重複検出方法を使うかどうか
-    use_legacy = request.args.get('legacy', 'false') == 'true'
-    
     duplicates = []
     
-    if use_legacy:
-        # 旧来の単純な重複チェック（修正なし）
-        all_products = Product.query.all()
-        duplicate_groups = []
-        processed = set()
-        TITLE_SIMILARITY_THRESHOLD = 0.8
+    # 高度な重複検出アルゴリズムを使用
+    try:
+        detector = DuplicateDetector(
+            title_similarity_threshold=threshold, 
+            use_circle_name=use_circle,
+            use_tf_idf=use_tfidf
+        )
+        duplicate_results = detector.find_duplicates(max_results=max_results)
         
-        # 重複チェックロジック（既存コードを維持）
-        for i, product1 in enumerate(all_products):
-            # 既に処理済みならスキップ
-            if product1.id in processed:
-                continue
+        # テンプレート用にデータを整形
+        for result in duplicate_results:
+            dmm_product = result['dmm_product']
+            dlsite_product = result['dlsite_product']
+            similarity = result['similarity']
             
-            # 新しい重複グループ
-            current_group = [product1]
-            processed.add(product1.id)
+            # 価格差を計算
+            price_diff = 0
+            if dmm_product.price and dlsite_product.price:
+                price_diff = dmm_product.price - dlsite_product.price
             
-            # 正規化されたタイトル
-            normalized_title1 = _normalize_title(product1.title)
+            duplicates.append({
+                'dmm_product': dmm_product,
+                'dlsite_product': dlsite_product,
+                'similarity': similarity,
+                'price_diff': price_diff,
+                'maker_match': result.get('maker_match', False)
+            })
             
-            for j in range(i + 1, len(all_products)):
-                product2 = all_products[j]
-                
-                # 既に処理済みならスキップ
-                if product2.id in processed:
-                    continue
-                
-                # タイトル類似度チェック
-                normalized_title2 = _normalize_title(product2.title)
-                title_similarity = difflib.SequenceMatcher(None, normalized_title1, normalized_title2).ratio()
-                
-                # メーカー/サークル一致チェック
-                maker_match = (product1.maker and product2.maker and 
-                              product1.maker.lower() == product2.maker.lower())
-                
-                # カテゴリ一致チェック
-                category_match = (product1.category and product2.category and 
-                                 product1.category.lower() == product2.category.lower())
-                
-                # 最終的な判定
-                is_duplicate = False
-                
-                # タイトルが非常に似ている場合
-                if title_similarity > TITLE_SIMILARITY_THRESHOLD:
-                    # メーカーまたはカテゴリも一致する場合、確実に重複
-                    if maker_match or category_match:
-                        is_duplicate = True
-                    # それ以外でも、タイトルの類似度がかなり高い場合は重複候補
-                    elif title_similarity > 0.9:
-                        is_duplicate = True
-                
-                # メーカーが一致し、タイトルもある程度似ている場合も重複候補
-                elif maker_match and title_similarity > 0.6:
-                    is_duplicate = True
-                
-                if is_duplicate:
-                    current_group.append(product2)
-                    processed.add(product2.id)
-            
-            # グループに複数のアイテムがある場合のみ追加
-            if len(current_group) > 1:
-                duplicate_groups.append(current_group)
+        logger.info(f"重複検出完了: {len(duplicates)}件の重複候補が見つかりました")
         
-        # テンプレート用にデータを変換
-        for group in duplicate_groups:
-            for i in range(len(group) - 1):
-                for j in range(i+1, len(group)):
-                    # 2製品間の価格差を計算
-                    price_diff = group[i].price - group[j].price if group[i].price and group[j].price else 0
-                    # タイトル類似度を計算
-                    title_similarity = difflib.SequenceMatcher(
-                        None, 
-                        _normalize_title(group[i].title),
-                        _normalize_title(group[j].title)
-                    ).ratio()
-                    
-                    duplicates.append({
-                        'product1': group[i],
-                        'product2': group[j],
-                        'similarity': title_similarity,
-                        'price_diff': price_diff,
-                        'is_same_platform': group[i].platform == group[j].platform
-                    })
-    else:
-        # 新しい高度な重複検出アルゴリズムを使用
-        try:
-            detector = DuplicateDetector(
-                title_similarity_threshold=threshold, 
-                use_circle_name=use_circle,
-                use_tf_idf=use_tfidf
-            )
-            duplicate_results = detector.find_duplicates(max_results=max_results)
-            
-            # テンプレート用にデータを整形
-            for result in duplicate_results:
-                dmm_product = result['dmm_product']
-                dlsite_product = result['dlsite_product']
-                similarity = result['similarity']
-                
-                # 価格差を計算
-                price_diff = 0
-                if dmm_product.price and dlsite_product.price:
-                    price_diff = dmm_product.price - dlsite_product.price
-                
-                duplicates.append({
-                    'dmm_product': dmm_product,
-                    'dlsite_product': dlsite_product,
-                    'similarity': similarity,
-                    'price_diff': price_diff,
-                    'maker_match': result.get('maker_match', False)
-                })
-                
-            logger.info(f"重複検出完了: {len(duplicates)}件の重複候補が見つかりました")
-            
-        except Exception as e:
-            logger.error(f"重複検出中にエラーが発生しました: {str(e)}")
-            flash(f'重複検出中にエラーが発生しました: {str(e)}', 'danger')
+    except Exception as e:
+        logger.error(f"重複検出中にエラーが発生しました: {str(e)}")
+        flash(f'重複検出中にエラーが発生しました: {str(e)}', 'danger')
     
     return render_template('duplicates.html', 
                           duplicates=duplicates,
                           threshold=threshold,
                           max_results=max_results,
                           use_tfidf=use_tfidf,
-                          use_circle=use_circle,
-                          use_legacy=use_legacy)
+                          use_circle=use_circle)
 
 def _normalize_title(title):
     """タイトルの正規化"""

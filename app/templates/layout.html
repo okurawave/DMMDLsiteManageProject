@@ -58,6 +58,24 @@
                             </li>
                         </ul>
                     </li>
+                    <!-- ナビゲーションのドロップダウンメニュー項目に購入履歴インポート機能へのリンクを追加 -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% if '/import' in request.path %}active{% endif %}" href="#" id="importDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-cloud-download-alt"></i> 購入履歴インポート
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="importDropdown">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('import.run_import') }}">
+                                    <i class="fas fa-download"></i> インポート実行
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('import.settings') }}">
+                                    <i class="fas fa-cog"></i> インポート設定
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
                 </ul>
                 <div class="d-flex">
                     <a href="{{ url_for('product.add_product') }}" class="btn btn-outline-light me-2">

@@ -1,0 +1,184 @@
+{% extends "layout.html" %}
+
+{% block title %}購入履歴インポート実行 | DMM/DLsite 購入管理{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">購入履歴インポート実行</h1>
+    
+    <div class="alert alert-info mb-4">
+        <i class="fas fa-info-circle"></i> DMMとDLsiteから購入履歴を取得して登録します。
+        インポート前に<a href="{{ url_for('import.settings') }}">設定ページ</a>で認証情報を登録してください。
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>インポート設定</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{ url_for('import.run_import') }}" id="import-form">
+                        <div class="mb-3">
+                            <label class="form-label">インポート対象</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="import_dmm" name="import_dmm" value="1" 
+                                       {% if not dmm_enabled or not dmm_has_credentials %}disabled{% endif %} checked>
+                                <label class="form-check-label" for="import_dmm">
+                                    DMM購入履歴
+                                </label>
+                                {% if not dmm_enabled %}
+                                <div class="form-text text-danger">設定画面でDMMのインポートが無効になっています</div>
+                                {% elif not dmm_has_credentials %}
+                                <div class="form-text text-danger">DMMの認証情報が設定されていません</div>
+                                {% endif %}
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="import_dlsite" name="import_dlsite" value="1" 
+                                       {% if not dlsite_enabled or not dlsite_has_credentials %}disabled{% endif %} checked>
+                                <label class="form-check-label" for="import_dlsite">
+                                    DLsite購入履歴
+                                </label>
+                                {% if not dlsite_enabled %}
+                                <div class="form-text text-danger">設定画面でDLsiteのインポートが無効になっています</div>
+                                {% elif not dlsite_has_credentials %}
+                                <div class="form-text text-danger">DLsiteの認証情報が設定されていません</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="start_date" class="form-label">開始日</label>
+                                <input type="date" class="form-control" id="start_date" name="start_date" value="{{ default_start_date }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="end_date" class="form-label">終了日</label>
+                                <input type="date" class="form-control" id="end_date" name="end_date" value="{{ default_end_date }}">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="max_pages" class="form-label">最大取得ページ数</label>
+                            <select class="form-select" id="max_pages" name="max_pages">
+                                <option value="1">1ページ</option>
+                                <option value="3">3ページ</option>
+                                <option value="5" selected>5ページ</option>
+                                <option value="10">10ページ</option>
+                                <option value="20">20ページ</option>
+                            </select>
+                            <div class="form-text">多すぎると時間がかかります</div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary" id="import-button">
+                                <i class="fas fa-download"></i> インポート実行
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>インポート状況</h5>
+                </div>
+                <div class="card-body">
+                    {% if dmm_results.added > 0 or dmm_results.updated > 0 or dlsite_results.added > 0 or dlsite_results.updated > 0 %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i> インポートが完了しました
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6>DMM結果</h6>
+                            <ul class="list-group">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    新規追加
+                                    <span class="badge bg-success rounded-pill">{{ dmm_results.added }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    更新
+                                    <span class="badge bg-primary rounded-pill">{{ dmm_results.updated }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    エラー
+                                    <span class="badge bg-danger rounded-pill">{{ dmm_results.errors|length }}</span>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6>DLsite結果</h6>
+                            <ul class="list-group">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    新規追加
+                                    <span class="badge bg-success rounded-pill">{{ dlsite_results.added }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    更新
+                                    <span class="badge bg-primary rounded-pill">{{ dlsite_results.updated }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    エラー
+                                    <span class="badge bg-danger rounded-pill">{{ dlsite_results.errors|length }}</span>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        {% if dmm_results.errors or dlsite_results.errors %}
+                            <div class="accordion" id="errorAccordion">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="errorHeading">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                                data-bs-target="#errorCollapse" aria-expanded="false" aria-controls="errorCollapse">
+                                            エラー詳細 ({{ dmm_results.errors|length + dlsite_results.errors|length }})
+                                        </button>
+                                    </h2>
+                                    <div id="errorCollapse" class="accordion-collapse collapse" aria-labelledby="errorHeading"
+                                         data-bs-parent="#errorAccordion">
+                                        <div class="accordion-body">
+                                            <ul class="list-group">
+                                                {% for error in dmm_results.errors %}
+                                                    <li class="list-group-item list-group-item-danger">
+                                                        <strong>DMM:</strong> {{ error }}
+                                                    </li>
+                                                {% endfor %}
+                                                {% for error in dlsite_results.errors %}
+                                                    <li class="list-group-item list-group-item-danger">
+                                                        <strong>DLsite:</strong> {{ error }}
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="alert alert-secondary">
+                            <i class="fas fa-info-circle"></i> まだインポートは実行されていません
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const importForm = document.getElementById('import-form');
+        const importButton = document.getElementById('import-button');
+        
+        importForm.addEventListener('submit', function() {
+            // ボタンを無効化
+            importButton.disabled = true;
+            importButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> インポート中...';
+        });
+    });
+</script>
+{% endblock %}

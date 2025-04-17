@@ -1,6 +1,7 @@
 from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+import logging
 import os
 
 # データベース初期化
@@ -18,16 +19,24 @@ def create_app(config=None):
     db.init_app(app)
     migrate.init_app(app, db)
     
+    # ロギング設定
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    
     # Blueprintsの登録
     from app.controllers.main_controller import main_bp
     from app.controllers.scraper_controller import scraper_bp
     from app.controllers.product_controller import product_bp
     from app.controllers.purchase_controller import purchase_bp
+    from app.controllers.import_controller import import_bp
     
     app.register_blueprint(main_bp)
     app.register_blueprint(scraper_bp)
     app.register_blueprint(product_bp)
     app.register_blueprint(purchase_bp)
+    app.register_blueprint(import_bp)
     
     # エラーハンドラの登録
     @app.errorhandler(404)

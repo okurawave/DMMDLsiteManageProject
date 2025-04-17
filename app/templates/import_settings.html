@@ -1,0 +1,186 @@
+{% extends "layout.html" %}
+
+{% block title %}購入履歴インポート設定 | DMM/DLsite 購入管理{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">購入履歴インポート設定</h1>
+    
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> DMMとDLsiteのアカウント情報を設定して、購入履歴を自動的にインポートできます。
+        入力されたログイン情報は暗号化して保存され、購入履歴の取得のみに使用されます。
+    </div>
+    
+    <form method="post" action="{{ url_for('import.settings') }}" class="card">
+        <div class="card-header">
+            <h5>認証設定</h5>
+        </div>
+        <div class="card-body">
+            <!-- DMM設定 -->
+            <div class="mb-4 p-3 border rounded">
+                <h5 class="border-bottom pb-2 mb-3">DMM設定</h5>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="dmm_enabled" name="dmm_enabled" {% if dmm_enabled %}checked{% endif %}>
+                    <label class="form-check-label" for="dmm_enabled">
+                        DMMから購入履歴を取得する
+                    </label>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="dmm_username" class="form-label">DMMユーザー名 / メールアドレス</label>
+                        <input type="text" class="form-control" id="dmm_username" name="dmm_username" 
+                               placeholder="{% if dmm_username %}現在: {{ dmm_username }}{% else %}未設定{% endif %}">
+                        <div class="form-text">変更する場合のみ入力してください</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="dmm_password" class="form-label">DMMパスワード</label>
+                        <input type="password" class="form-control" id="dmm_password" name="dmm_password" 
+                               placeholder="{% if dmm_username %}変更する場合のみ入力{% else %}未設定{% endif %}">
+                    </div>
+                </div>
+                
+                <div class="mt-2">
+                    <button type="button" id="test_dmm_connection" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-plug"></i> 接続テスト
+                    </button>
+                    <div id="dmm_connection_result" class="mt-2"></div>
+                </div>
+            </div>
+            
+            <!-- DLsite設定 -->
+            <div class="mb-4 p-3 border rounded">
+                <h5 class="border-bottom pb-2 mb-3">DLsite設定</h5>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="dlsite_enabled" name="dlsite_enabled" {% if dlsite_enabled %}checked{% endif %}>
+                    <label class="form-check-label" for="dlsite_enabled">
+                        DLsiteから購入履歴を取得する
+                    </label>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="dlsite_username" class="form-label">DLsiteユーザー名 / メールアドレス</label>
+                        <input type="text" class="form-control" id="dlsite_username" name="dlsite_username" 
+                               placeholder="{% if dlsite_username %}現在: {{ dlsite_username }}{% else %}未設定{% endif %}">
+                        <div class="form-text">変更する場合のみ入力してください</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="dlsite_password" class="form-label">DLsiteパスワード</label>
+                        <input type="password" class="form-control" id="dlsite_password" name="dlsite_password" 
+                               placeholder="{% if dlsite_username %}変更する場合のみ入力{% else %}未設定{% endif %}">
+                    </div>
+                </div>
+                
+                <div class="mt-2">
+                    <button type="button" id="test_dlsite_connection" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-plug"></i> 接続テスト
+                    </button>
+                    <div id="dlsite_connection_result" class="mt-2"></div>
+                </div>
+            </div>
+            
+            <!-- 自動インポート設定 -->
+            <div class="mb-3 p-3 border rounded">
+                <h5 class="border-bottom pb-2 mb-3">自動インポート設定</h5>
+                <div class="mb-3">
+                    <label for="auto_import_interval" class="form-label">インポート頻度</label>
+                    <select class="form-select" id="auto_import_interval" name="auto_import_interval">
+                        <option value="0" {% if auto_import_interval == 0 %}selected{% endif %}>手動インポートのみ</option>
+                        <option value="1" {% if auto_import_interval == 1 %}selected{% endif %}>毎日</option>
+                        <option value="7" {% if auto_import_interval == 7 %}selected{% endif %}>週1回</option>
+                        <option value="30" {% if auto_import_interval == 30 %}selected{% endif %}>月1回</option>
+                    </select>
+                    <div class="form-text">自動インポートはバックグラウンドで実行されます</div>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer text-center">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> 設定を保存
+            </button>
+            <a href="{{ url_for('import.run_import') }}" class="btn btn-success">
+                <i class="fas fa-download"></i> 購入履歴インポート実行
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // DMM接続テスト
+        document.getElementById('test_dmm_connection').addEventListener('click', function() {
+            const username = document.getElementById('dmm_username').value;
+            const password = document.getElementById('dmm_password').value;
+            const resultDiv = document.getElementById('dmm_connection_result');
+            
+            resultDiv.innerHTML = '<div class="spinner-border spinner-border-sm text-primary" role="status"><span class="visually-hidden">Loading...</span></div> テスト中...';
+            
+            // 現在の入力が空の場合は、保存済みの認証情報を使用
+            const useStoredCredentials = !username || !password;
+            
+            fetch('{{ url_for("import.test_connection") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    platform: 'dmm',
+                    username: useStoredCredentials ? null : username,
+                    password: useStoredCredentials ? null : password,
+                    use_stored: useStoredCredentials
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    resultDiv.innerHTML = `<div class="alert alert-success mb-0"><i class="fas fa-check-circle"></i> ${data.message}</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="alert alert-danger mb-0"><i class="fas fa-exclamation-circle"></i> ${data.message}</div>`;
+                }
+            })
+            .catch(error => {
+                resultDiv.innerHTML = `<div class="alert alert-danger mb-0"><i class="fas fa-exclamation-circle"></i> エラーが発生しました: ${error.message}</div>`;
+            });
+        });
+        
+        // DLsite接続テスト
+        document.getElementById('test_dlsite_connection').addEventListener('click', function() {
+            const username = document.getElementById('dlsite_username').value;
+            const password = document.getElementById('dlsite_password').value;
+            const resultDiv = document.getElementById('dlsite_connection_result');
+            
+            resultDiv.innerHTML = '<div class="spinner-border spinner-border-sm text-primary" role="status"><span class="visually-hidden">Loading...</span></div> テスト中...';
+            
+            // 現在の入力が空の場合は、保存済みの認証情報を使用
+            const useStoredCredentials = !username || !password;
+            
+            fetch('{{ url_for("import.test_connection") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    platform: 'dlsite',
+                    username: useStoredCredentials ? null : username,
+                    password: useStoredCredentials ? null : password,
+                    use_stored: useStoredCredentials
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    resultDiv.innerHTML = `<div class="alert alert-success mb-0"><i class="fas fa-check-circle"></i> ${data.message}</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="alert alert-danger mb-0"><i class="fas fa-exclamation-circle"></i> ${data.message}</div>`;
+                }
+            })
+            .catch(error => {
+                resultDiv.innerHTML = `<div class="alert alert-danger mb-0"><i class="fas fa-exclamation-circle"></i> エラーが発生しました: ${error.message}</div>`;
+            });
+        });
+    });
+</script>
+{% endblock %}
