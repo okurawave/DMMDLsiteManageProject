@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "app",
+    "name": "My Doujin Vault",
     "slug": "app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -27,6 +27,16 @@
     },
     "plugins": [
       "expo-router"
-    ]
+    ],
+    "extra": {
+      "firebase": {
+        "apiKey": "",
+        "authDomain": "",
+        "projectId": "",
+        "storageBucket": "",
+        "messagingSenderId": "",
+        "appId": ""
+      }
+    }
   }
 }

@@ -1,5 +1,19 @@
-import { View, Text, StyleSheet } from 'react-native';export default function Search() {  return (    <View style={styles.container}>      <Text style={styles.title}>検索</Text>      <Text>検索・フィルタリングのUIを配置します。</Text>    </View>  );}
+import { View, Text, StyleSheet } from 'react-native';
+import { Searchbar } from 'react-native-paper';
+import { useState } from 'react';
+
+export default function Search() {
+  const [q, setQ] = useState('');
+  return (
+    <View style={styles.container}>
+      <Searchbar value={q} onChangeText={setQ} placeholder="検索" style={{ margin: 12 }} />
+      <Text style={{ margin: 12 }}>
+        キーワード「{q || '...'}」での検索結果がここに表示されます。
+      </Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
-  title: { fontSize: 22, fontWeight: '600' },
+  container: { flex: 1 },
 });

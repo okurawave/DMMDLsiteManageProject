@@ -1,11 +1,14 @@
 import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { PaperProvider, MD3LightTheme as DefaultTheme } from 'react-native-paper';
+import { PaperProvider } from 'react-native-paper';
+import { getPaperTheme, useThemeStore } from '../src/theme';
 
 export default function RootLayout() {
+  // サブスクライブしてテーマ変更を反映
+  const mode = useThemeStore((s) => s.mode);
   return (
     <SafeAreaProvider>
-      <PaperProvider theme={DefaultTheme}>
+      <PaperProvider theme={getPaperTheme()}>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         </Stack>

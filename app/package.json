@@ -1,5 +1,5 @@
 {
-  "name": "app",
+  "name": "my-doujin-vault",
   "version": "1.0.0",
   "main": "expo-router/entry",
   "scripts": {
@@ -13,7 +13,9 @@
     "@expo/vector-icons": "^14.1.0",
     "dayjs": "^1.11.13",
     "expo": "~53.0.20",
+    "expo-router": "~5.1.4",
     "expo-status-bar": "~2.2.3",
+    "firebase": "^12.1.0",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-native": "0.79.5",
@@ -21,11 +23,10 @@
     "react-native-paper": "^5.14.5",
     "react-native-reanimated": "~3.17.4",
     "react-native-safe-area-context": "5.4.0",
+    "react-native-screens": "~4.11.1",
     "react-native-svg": "15.11.2",
     "react-native-web": "^0.20.0",
-    "zustand": "^5.0.7",
-    "expo-router": "~5.1.4",
-    "react-native-screens": "~4.11.1"
+    "zustand": "^5.0.7"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

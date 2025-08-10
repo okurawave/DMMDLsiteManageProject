@@ -1,9 +1,15 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-  "strict": true,
-  "jsx": "react-jsx",
-  "lib": ["ES2021", "DOM"],
-  "types": ["expo-router"]
+    "strict": true,
+    "jsx": "react-jsx",
+    "lib": ["ES2021", "DOM"],
+    "types": ["expo-router"],
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "module": "ESNext",
+    "forceConsistentCasingInFileNames": true
   }
 }
