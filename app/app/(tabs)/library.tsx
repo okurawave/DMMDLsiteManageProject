@@ -3,7 +3,8 @@ import { Searchbar, Card, Button, ActivityIndicator, Text as PaperText, FAB, Chi
 import { useState, useMemo, useEffect } from 'react';
 import FadeInView from '../../src/components/FadeInView';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
-import { ensureSignedInAnonymously, listWorkDocs, addWorkDoc, subscribeWorks, listWorksPage, tryExtractIndexUrlFromError } from '../../src/lib/firebase';
+import { ensureSignedInAnonymously, subscribeWorks, listWorksPage, tryExtractIndexUrlFromError } from '../../src/lib/firebase';
+import { useWorksStore } from '../../src/stores/works';
 import * as Linking from 'expo-linking';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -18,6 +19,8 @@ const MOCK = Array.from({ length: 12 }).map((_, i) => ({ id: String(i + 1), titl
 export default function Library() {
 		const [q, setQ] = useState('');
 			const [remote, setRemote] = useState<Array<{ id: string; title?: string; platform?: string; status?: string; tags?: string[]; createdAt?: any }>>([]);
+			const localList = useWorksStore((s) => s.list)();
+			const itemsMap = useWorksStore((s) => s.items);
 			const [loading, setLoading] = useState(false);
 			const [error, setError] = useState<string | null>(null);
 			const [snack, setSnack] = useState<string | null>(null);
@@ -30,9 +33,16 @@ export default function Library() {
 			const [appending, setAppending] = useState(false);
 			const ids = useMemo(() => new Set(remote.map(r => r.id)), [remote]);
 		const data = useMemo(() => {
-			const base = remote.length ? remote : MOCK;
+			const deletedIds = new Set(
+				Object.values(itemsMap)
+					.filter((w: any) => w?._deleted)
+					.map((w: any) => w.remoteId ?? w.id)
+			);
+			const base = localList.length
+				? localList
+				: (remote.length ? remote.filter((r) => !deletedIds.has(r.id)) : MOCK);
 			return base.filter((x) => (x.title ?? '').includes(q));
-		}, [q, remote]);
+		}, [q, remote, localList, itemsMap]);
 
 		const load = useCallback(async () => {
 			setLoading(true);
@@ -105,6 +115,7 @@ export default function Library() {
 				<Text>タグ:</Text>
 				<Searchbar value={tagFilter ?? ''} onChangeText={(v) => setTagFilter(v || null)} placeholder="タグ名" style={{ flex: 1 }} />
 			</View>
+			<SyncBar />
 					{loading && (
 						<View style={{ padding: 24, alignItems: 'center' }}>
 							<ActivityIndicator />
@@ -129,23 +140,13 @@ export default function Library() {
 										: null
 								}
 			/>
-					<Button
-						mode="contained"
-						style={{ margin: 12 }}
-						onPress={async () => {
-							try {
-								const user = await ensureSignedInAnonymously();
-								const id = await addWorkDoc({ title: `作品 ${Date.now()}`, uid: user?.uid, platform: 'DLsite', status: '未読', tags: ['sample'] });
-								const docs = await listWorkDocs();
-								setRemote(docs as any);
-							} catch (e) {
-								console.warn(e);
-								setSnack('作成に失敗しました');
-							}
-						}}
-					>
-						作品を追加（Firestore）
-					</Button>
+				<Button
+					mode="contained"
+					style={{ marginHorizontal: 12, marginBottom: 8 }}
+					onPress={() => router.push('/add')}
+				>
+					作品追加
+				</Button>
 				<Button
 					mode="outlined"
 					style={{ marginHorizontal: 12, marginBottom: 12 }}
@@ -206,6 +207,7 @@ const styles = StyleSheet.create({
 function LibraryItem({ item }: { item: { id: string; title?: string; createdAt?: any; platform?: string; status?: string; tags?: string[] } }) {
 	const scale = useSharedValue(1);
 	const aStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+	const router = useRouter();
 	const subtitle = (() => {
 		const ts = item.createdAt;
 		if (!ts) return `ID: ${item.id}`;
@@ -220,9 +222,10 @@ function LibraryItem({ item }: { item: { id: string; title?: string; createdAt?:
 	return (
 		<FadeInView>
 			<Animated.View style={aStyle}>
-				<Card
+						<Card
 					onPressIn={() => { scale.value = withTiming(0.98, { duration: 80 }); }}
 					onPressOut={() => { scale.value = withTiming(1, { duration: 120 }); }}
+							onPress={() => router.push(`/work/${item.id}`)}
 				>
 					<Card.Title title={item.title} subtitle={subtitle} />
 					<Card.Content>
@@ -239,5 +242,29 @@ function LibraryItem({ item }: { item: { id: string; title?: string; createdAt?:
 				</Card>
 			</Animated.View>
 		</FadeInView>
+	);
+}
+
+function SyncBar() {
+	const [syncing, setSyncing] = useState(false);
+	const [snack, setSnack] = useState<string | null>(null);
+	const syncToCloud = useWorksStore((s) => s.syncToCloud);
+	const lastSyncAt = useWorksStore((s) => s.lastSyncAt);
+	return (
+		<View style={{ flexDirection: 'row', gap: 12, alignItems: 'center', paddingHorizontal: 12, marginTop: 8 }}>
+			<Button mode="outlined" loading={syncing} onPress={async () => {
+				setSyncing(true);
+				try {
+					await syncToCloud();
+					setSnack('クラウドと同期しました');
+				} catch (e) {
+					setSnack('同期に失敗しました');
+				} finally {
+					setSyncing(false);
+				}
+			}}>同期</Button>
+			<Text style={{ opacity: 0.7 }}>最終同期: {lastSyncAt ? dayjs(lastSyncAt).fromNow() : '未実行'}</Text>
+			<Snackbar visible={!!snack} onDismiss={() => setSnack(null)} duration={3000}>{snack || ''}</Snackbar>
+		</View>
 	);
 }

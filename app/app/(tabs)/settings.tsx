@@ -1,10 +1,13 @@
 import { View, Text, StyleSheet } from 'react-native';
-import { Switch, List, Button } from 'react-native-paper';
+import { Switch, List, Button, Card, TextInput } from 'react-native-paper';
 import { useThemeStore } from '../../src/theme';
 import { useEffect, useState } from 'react';
 import { initFirebase, signInWithGoogleWeb, subscribeAuth, signOutUser } from '../../src/lib/firebase';
+import { useWorksStore } from '../../src/stores/works';
 
 export default function SettingsTab() {
+  const setAutoSyncInterval = useWorksStore((s) => s.setAutoSyncInterval);
+  const [syncMinutes, setSyncMinutes] = useState<string>('');
   const mode = useThemeStore((s) => s.mode);
   const toggle = useThemeStore((s) => s.toggle);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -55,6 +58,32 @@ export default function SettingsTab() {
           }}
         />
       </List.Section>
+      <Card style={{ margin: 12 }}>
+        <Card.Title title="同期設定" />
+        <Card.Content>
+          <TextInput
+            label="自動同期（分）"
+            value={syncMinutes}
+            onChangeText={setSyncMinutes}
+            keyboardType="numeric"
+            style={{ marginBottom: 8 }}
+            placeholder="例: 5"
+          />
+          <Button
+            mode="outlined"
+            onPress={() => {
+              const m = parseInt(syncMinutes || '0', 10);
+              if (!m || m <= 0) {
+                setAutoSyncInterval(null);
+              } else {
+                setAutoSyncInterval(m * 60 * 1000);
+              }
+            }}
+          >
+            設定を適用
+          </Button>
+        </Card.Content>
+      </Card>
     </View>
   );
 }

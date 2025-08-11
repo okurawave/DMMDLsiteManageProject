@@ -11,8 +11,10 @@
   "dependencies": {
     "@expo/metro-runtime": "~5.0.4",
     "@expo/vector-icons": "^14.1.0",
+    "@react-native-async-storage/async-storage": "^1.24.0",
     "dayjs": "^1.11.13",
     "expo": "~53.0.20",
+    "expo-image-picker": "~15.0.7",
     "expo-router": "~5.1.4",
     "expo-status-bar": "~2.2.3",
     "firebase": "^12.1.0",
