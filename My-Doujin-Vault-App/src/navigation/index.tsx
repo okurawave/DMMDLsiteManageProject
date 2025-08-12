@@ -1,7 +1,7 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { HeaderButton, Text } from '@react-navigation/elements';
 import {
-  createStaticNavigation,
+  NavigationContainer,
   StaticParamList,
 } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -13,6 +13,9 @@ import { Profile } from './screens/Profile';
 import { Settings } from './screens/Settings';
 import { Updates } from './screens/Updates';
 import { NotFound } from './screens/NotFound';
+import { SignInScreen } from './screens/SignInScreen';
+import { useAuth } from '../context/AuthContext';
+import { ComponentProps } from 'react';
 
 const HomeTabs = createBottomTabNavigator({
   screens: {
@@ -94,7 +97,32 @@ const RootStack = createNativeStackNavigator({
   },
 });
 
-export const Navigation = createStaticNavigation(RootStack);
+const AuthStack = createNativeStackNavigator({
+  screens: {
+    SignIn: {
+      screen: SignInScreen,
+      options: {
+        headerShown: false,
+      },
+    },
+  },
+});
+
+export function Navigation(
+  props: Omit<ComponentProps<typeof NavigationContainer>, 'children'>
+) {
+  const { isAuthenticated } = useAuth();
+
+  return (
+    <NavigationContainer {...props}>
+      {isAuthenticated ? (
+        <RootStack.Navigator />
+      ) : (
+        <AuthStack.Navigator />
+      )}
+    </NavigationContainer>
+  );
+}
 
 type RootStackParamList = StaticParamList<typeof RootStack>;
 
