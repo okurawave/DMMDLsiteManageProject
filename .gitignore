@@ -1,0 +1,10 @@
+# Node/Expo
+node_modules/
+.expo/
+.expo-shared/
+dist/
+web-build/
+*.log
+.env
+.env.*
+coverage/
