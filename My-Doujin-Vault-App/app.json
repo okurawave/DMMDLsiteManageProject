@@ -23,7 +23,12 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-asset",
+      [
+        "expo-asset",
+        {
+          "assets": ["./assets/google_signin/*.png"]
+        }
+      ],
       [
         "expo-splash-screen",
         {
@@ -38,6 +43,9 @@
           "iosUrlScheme": "com.googleusercontent.apps.1234567890-abcdefg"
         }
       ]
+    ],
+    "assetBundlePatterns": [
+      "assets/google_signin/*"
     ]
   }
 }

@@ -17,96 +17,104 @@ import { SignInScreen } from './screens/SignInScreen';
 import { useAuth } from '../context/AuthContext';
 import { ComponentProps } from 'react';
 
-const HomeTabs = createBottomTabNavigator({
-  screens: {
-    Home: {
-      screen: Home,
-      options: {
-        title: 'Feed',
-        tabBarIcon: ({ color, size }) => (
-          <Image
-            source={newspaper}
-            tintColor={color}
-            style={{
-              width: size,
-              height: size,
-            }}
-          />
-        ),
-      },
-    },
-    Updates: {
-      screen: Updates,
-      options: {
-        tabBarIcon: ({ color, size }) => (
-          <Image
-            source={bell}
-            tintColor={color}
-            style={{
-              width: size,
-              height: size,
-            }}
-          />
-        ),
-      },
-    },
-  },
-});
+// Create navigators using the traditional method
+const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
+const AuthStackNavigator = createNativeStackNavigator();
 
-const RootStack = createNativeStackNavigator({
-  screens: {
-    HomeTabs: {
-      screen: HomeTabs,
-      options: {
-        title: 'Home',
-        headerShown: false,
-      },
-    },
-    Profile: {
-      screen: Profile,
-      linking: {
-        path: ':user(@[a-zA-Z0-9-_]+)',
-        parse: {
-          user: (value) => value.replace(/^@/, ''),
-        },
-        stringify: {
-          user: (value) => `@${value}`,
-        },
-      },
-    },
-    Settings: {
-      screen: Settings,
-      options: ({ navigation }) => ({
-        presentation: 'modal',
-        headerRight: () => (
-          <HeaderButton onPress={navigation.goBack}>
-            <Text>Close</Text>
-          </HeaderButton>
-        ),
-      }),
-    },
-    NotFound: {
-      screen: NotFound,
-      options: {
-        title: '404',
-      },
-      linking: {
-        path: '*',
-      },
-    },
-  },
-});
+function HomeTabs() {
+  return (
+    <Tab.Navigator>
+      <Tab.Screen
+        name="Home"
+        component={Home}
+        options={{
+          title: 'Feed',
+          tabBarIcon: ({ color, size }) => (
+            <Image
+              source={newspaper}
+              tintColor={color}
+              style={{
+                width: size,
+                height: size,
+              }}
+            />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Updates"
+        component={Updates}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <Image
+              source={bell}
+              tintColor={color}
+              style={{
+                width: size,
+                height: size,
+              }}
+            />
+          ),
+        }}
+      />
+    </Tab.Navigator>
+  );
+}
 
-const AuthStack = createNativeStackNavigator({
-  screens: {
-    SignIn: {
-      screen: SignInScreen,
-      options: {
-        headerShown: false,
-      },
-    },
-  },
-});
+function RootStack() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen
+        name="HomeTabs"
+        component={HomeTabs}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="Profile"
+        component={Profile}
+        options={({ navigation }) => ({
+          presentation: 'modal',
+        })}
+      />
+      <Stack.Screen
+        name="Settings"
+        component={Settings}
+        options={({ navigation }) => ({
+          presentation: 'modal',
+          headerRight: () => (
+            <HeaderButton onPress={navigation.goBack}>
+              <Text>Close</Text>
+            </HeaderButton>
+          ),
+        })}
+      />
+      <Stack.Screen
+        name="NotFound"
+        component={NotFound}
+        options={{
+          title: '404',
+        }}
+      />
+    </Stack.Navigator>
+  );
+}
+
+function AuthStack() {
+  return (
+    <AuthStackNavigator.Navigator>
+      <AuthStackNavigator.Screen
+        name="SignIn"
+        component={SignInScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+    </AuthStackNavigator.Navigator>
+  );
+}
 
 export function Navigation(
   props: Omit<ComponentProps<typeof NavigationContainer>, 'children'>
@@ -115,19 +123,7 @@ export function Navigation(
 
   return (
     <NavigationContainer {...props}>
-      {isAuthenticated ? (
-        <RootStack.Navigator />
-      ) : (
-        <AuthStack.Navigator />
-      )}
+      {isAuthenticated ? <RootStack /> : <AuthStack />}
     </NavigationContainer>
   );
-}
-
-type RootStackParamList = StaticParamList<typeof RootStack>;
-
-declare global {
-  namespace ReactNavigation {
-    interface RootParamList extends RootStackParamList {}
-  }
 }

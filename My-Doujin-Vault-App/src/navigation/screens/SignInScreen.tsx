@@ -1,12 +1,35 @@
-import { Text, View, StyleSheet, Image, useColorScheme, TouchableOpacity, Linking, Alert } from 'react-native';
-import { useAuth } from '../../../context/AuthContext';
-import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
+import { Text, View, StyleSheet, Image, useColorScheme, TouchableOpacity, Linking, Alert, Platform } from 'react-native';
+import { useAuth } from '../../context/AuthContext';
 import { useEffect } from 'react';
 
+// Conditional import for Google Sign-in (only for native platforms)
+let GoogleSignin: any = null;
+let statusCodes: any = null;
+
+if (Platform.OS !== 'web') {
+  try {
+    const googleSigninModule = require('@react-native-google-signin/google-signin');
+    GoogleSignin = googleSigninModule.GoogleSignin;
+    statusCodes = googleSigninModule.statusCodes;
+  } catch (e) {
+    console.warn('Google Sign-in module not available');
+  }
+}
+
 // It's better to manage assets from a central place.
-const googleSignInButtonDark = require('../../../assets/google-signin/ios_dark_rd_SI@4x.png');
-const googleSignInButtonLight = require('../../../assets/google-signin/ios_light_rd_SI@4x.png');
-const appIcon = require('../../../../assets/icon.png');
+let googleSignInButtonDark: any = null;
+let googleSignInButtonLight: any = null;
+let appIcon: any = null;
+
+if (Platform.OS !== 'web') {
+  try {
+    googleSignInButtonDark = require('../../assets/google_signin/dark.png');
+    googleSignInButtonLight = require('../../assets/google_signin/ios_light_rd_SI@4x.png');
+    appIcon = require('../../../assets/icon.png');
+  } catch (e) {
+    console.warn('Assets not available:', e);
+  }
+}
 
 export function SignInScreen() {
   const { signIn } = useAuth();
@@ -14,13 +37,15 @@ export function SignInScreen() {
   const isDarkMode = colorScheme === 'dark';
 
   useEffect(() => {
-    GoogleSignin.configure({
-      // **************************************************************************************************
-      // * IMPORTANT: REPLACE WITH YOUR WEB CLIENT ID FROM GOOGLE CLOUD CONSOLE
-      // **************************************************************************************************
-      webClientId: 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com',
-      offlineAccess: true,
-    });
+    if (Platform.OS !== 'web' && GoogleSignin) {
+      GoogleSignin.configure({
+        // **************************************************************************************************
+        // * IMPORTANT: REPLACE WITH YOUR WEB CLIENT ID FROM GOOGLE CLOUD CONSOLE
+        // **************************************************************************************************
+        webClientId: 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com',
+        offlineAccess: true,
+      });
+    }
   }, []);
 
   const styles = StyleSheet.create({
@@ -65,6 +90,19 @@ export function SignInScreen() {
   const googleButton = isDarkMode ? googleSignInButtonDark : googleSignInButtonLight;
 
   const handleSignIn = async () => {
+    if (Platform.OS === 'web') {
+      // For web, use a simple mock sign-in
+      Alert.alert('Web Sign-in', 'Google Sign-in is not available on web. Using mock sign-in.', [
+        { text: 'OK', onPress: () => signIn() }
+      ]);
+      return;
+    }
+
+    if (!GoogleSignin) {
+      Alert.alert('Error', 'Google Sign-in is not available');
+      return;
+    }
+
     try {
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
@@ -73,13 +111,13 @@ export function SignInScreen() {
       console.log(JSON.stringify(userInfo, null, 2));
       signIn();
     } catch (error: any) {
-      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+      if (statusCodes && error.code === statusCodes.SIGN_IN_CANCELLED) {
         // user cancelled the login flow
         console.log('User cancelled the login flow');
-      } else if (error.code === statusCodes.IN_PROGRESS) {
+      } else if (statusCodes && error.code === statusCodes.IN_PROGRESS) {
         // operation (e.g. sign in) is in progress already
         console.log('Sign in is in progress');
-      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+      } else if (statusCodes && error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
         // play services not available or outdated
         Alert.alert('Error', 'Play services not available or outdated');
       } else {
@@ -97,12 +135,20 @@ export function SignInScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
-        <Image source={appIcon} style={styles.logo} />
+        {appIcon && <Image source={appIcon} style={styles.logo} />}
         <Text style={styles.appName}>My Doujin Vault</Text>
       </View>
 
       <TouchableOpacity onPress={handleSignIn}>
-        <Image source={googleButton} style={styles.signInButton} />
+        {googleButton && Platform.OS !== 'web' ? (
+          <Image source={googleButton} style={styles.signInButton} />
+        ) : (
+          <View style={[styles.signInButton, { backgroundColor: '#4285f4', justifyContent: 'center', alignItems: 'center' }]}>
+            <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold' }}>
+              {Platform.OS === 'web' ? 'Sign in with Google (Web)' : 'Sign in with Google'}
+            </Text>
+          </View>
+        )}
       </TouchableOpacity>
 
       <View style={styles.footerContainer}>

@@ -13,8 +13,7 @@ Asset.loadAsync([
   require('./assets/newspaper.png'),
   require('./assets/bell.png'),
   require('../assets/icon.png'),
-  require('./assets/google-signin/ios_dark_rd_SI@4x.png'),
-  require('./assets/google-signin/ios_light_rd_SI@4x.png'),
+  // Google sign-in assets are loaded directly in SignInScreen to avoid path resolution issues
 ]);
 
 SplashScreen.preventAutoHideAsync();
@@ -31,7 +30,7 @@ export function App() {
       <Navigation
         theme={theme}
         linking={{
-          enabled: 'auto',
+          enabled: true,
           prefixes: [prefix],
         }}
         onReady={() => {
