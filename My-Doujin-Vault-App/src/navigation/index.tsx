@@ -1,3 +1,4 @@
+import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { HeaderButton, Text } from '@react-navigation/elements';
 import {
@@ -104,7 +105,6 @@ function RootStack() {
 }
 
 // 初回起動かどうかの判定は本来はストレージ等で管理するが、ここでは仮実装
-import React from 'react';
 const isFirstLaunch = false; // TODO: AsyncStorage等で判定
 
 function AuthStack() {
