@@ -1,5 +1,13 @@
 # issue03: ユーザー認証と初期設定
 
+## 並列で進めてよい関連Issue
+- issue01（理念・概要）
+- issue02（システム構成）
+- issue04（管理モード切替）
+- issue05（作品CRUD）
+- issue10（ブラウザ拡張）
+- issue13（開発・運用方針）
+
 ## 現状（実装状況）
 - `useGoogleAuth` フックでOAuthフローは実装済み。
 - `AuthContext` やグローバルストアへの認証情報保存は未実装。
