@@ -12,10 +12,10 @@ export type AuthState = {
   logout: () => void;
 };
 
-export const useAuthStore = create<AuthState>((set: (partial: Partial<AuthState>) => void) => ({
+export const useAuthStore = create<AuthState>((set) => ({
   isLoggedIn: false,
   accessToken: null,
   user: null,
-  login: (token: string, user: { name: string; email: string; picture?: string }) => set({ isLoggedIn: true, accessToken: token, user }),
-  logout: () => set({ isLoggedIn: false, accessToken: null, user: null }),
+  login: (token: string, user: { name: string; email: string; picture?: string }) => set(() => ({ isLoggedIn: true, accessToken: token, user })),
+  logout: () => set(() => ({ isLoggedIn: false, accessToken: null, user: null })),
 }));
