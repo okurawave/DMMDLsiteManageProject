@@ -31,7 +31,7 @@ export function SignInScreen() {
         picture: user.picture,
       });
     }
-  }, [user]);
+  }, [user, login]);
 
   const styles = StyleSheet.create({
     container: {
