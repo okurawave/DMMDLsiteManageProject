@@ -1,5 +1,5 @@
 import { Text, View, StyleSheet, Image, useColorScheme, TouchableOpacity, Linking, Alert, Platform } from 'react-native';
-import { useAuth } from '../../context/AuthContext';
+import { useAuthContext } from '../../context/AuthContext';
 import { useEffect } from 'react';
 import { useGoogleAuth } from '../../hooks/useGoogleAuth';
 export function SignInScreen() {
@@ -17,7 +17,7 @@ export function SignInScreen() {
     }
   }
 
-  const { signIn: setAuth } = useAuth();
+  const { login } = useAuthContext();
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
   const { signIn: googleSignIn, user, loading, error } = useGoogleAuth();
@@ -25,7 +25,11 @@ export function SignInScreen() {
   // Google認証成功時にグローバルストアへ反映
   useEffect(() => {
     if (user) {
-      setAuth(); // 必要に応じてsetAuth(user)などに拡張
+      login(user.accessToken, {
+        name: user.name,
+        email: user.email,
+        picture: user.picture,
+      });
     }
   }, [user]);
 
