@@ -9,7 +9,6 @@ export const getDatabase = () => {
 };
 
 export const initDatabase = async (): Promise<void> => {
-  const db = getDatabase();
   await db.transactionAsync(async (tx: SQLite.SQLiteTransactionAsync) => {
     await tx.executeSqlAsync(
       `CREATE TABLE IF NOT EXISTS works (
