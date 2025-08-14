@@ -105,7 +105,7 @@ function RootStack() {
 }
 
 // 初回起動かどうかの判定は本来はストレージ等で管理するが、ここでは仮実装
-const isFirstLaunch = false; // TODO: AsyncStorage等で判定
+const isFirstLaunch = true; // TODO: AsyncStorage等で判定
 
 function AuthStack() {
   return (
