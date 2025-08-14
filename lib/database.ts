@@ -2,9 +2,10 @@
 import * as SQLite from 'expo-sqlite';
 
 const DB_NAME = 'mydoujinvault.db';
+const db = SQLite.openDatabase(DB_NAME);
 
 export const getDatabase = () => {
-  return SQLite.openDatabase(DB_NAME);
+  return db;
 };
 
 export const initDatabase = async (): Promise<void> => {

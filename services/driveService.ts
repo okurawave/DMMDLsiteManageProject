@@ -1,3 +1,34 @@
+// --- クラス設計案（今後のリファクタリング用） ---
+//
+// export class DriveService {
+//   private accessToken: string;
+//
+//   constructor(accessToken: string) {
+//     this.accessToken = accessToken;
+//   }
+//
+//   async listFiles(folderId?: string): Promise<DriveFile[]> {
+//     // TODO: Google Drive API呼び出し実装
+//     // this.accessToken を使用してAPIを呼び出す
+//     return [];
+//   }
+//
+//   async uploadFile(
+//     name: string,
+//     content: string | Blob,
+//     folderId?: string
+//   ): Promise<string> {
+//     // TODO: Google Drive API呼び出し実装
+//     // this.accessToken を使用
+//     return 'mock-file-id';
+//   }
+//
+//   // 他のメソッドも同様にクラスメソッドとして実装
+// }
+//
+// // 利用例:
+// // const driveService = new DriveService('your-access-token');
+// // const files = await driveService.listFiles();
 // Google Drive API クライアントサービス（v3）
 // サーバーレス前提。expo-auth-session等で取得したアクセストークンを利用。
 // ファイル操作（作成・取得・更新・削除）用の関数を提供
