@@ -1,0 +1,28 @@
+name: Gemini auto re-review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  comment:
+    permissions:
+      pull-requests: write   # コメント投稿に必要
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post /gemini review
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const {owner, repo} = context.repo;
+            const number = context.payload.pull_request.number;
+            // 任意: スキップ用の簡易判定（PRタイトルに [skip gemini] で無効）
+            const title = context.payload.pull_request.title || "";
+            if (title.includes("[skip gemini]")) {
+              core.notice("Skipped by [skip gemini] in PR title");
+            } else {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: number,
+                body: "/gemini review"
+              });
+            }
