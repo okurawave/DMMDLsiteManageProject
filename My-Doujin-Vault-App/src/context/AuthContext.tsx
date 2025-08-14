@@ -1,36 +1,23 @@
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
+import { useAuthStore } from '../store/authStore';
 
-interface AuthContextType {
-  isAuthenticated: boolean;
-  signIn: () => void;
-  signOut: () => void;
-}
+import type { AuthState } from '../store/authStore';
+export type AuthContextType = AuthState;
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const signIn = () => {
-    // In a real app, you'd have your auth logic here.
-    setIsAuthenticated(true);
-  };
-
-  const signOut = () => {
-    setIsAuthenticated(false);
-  };
-
-  return (
-    <AuthContext.Provider value={{ isAuthenticated, signIn, signOut }}>
-      {children}
-    </AuthContext.Provider>
-  );
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const store = useAuthStore();
+  useEffect(() => {
+    // TODO: 認証状態の永続化・復元処理
+  }, []);
+  return <AuthContext.Provider value={store}>{children}</AuthContext.Provider>;
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+
+export const useAuthContext = () => {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuthContext must be used within AuthProvider');
+  return ctx;
 };

@@ -1,3 +1,4 @@
+import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { HeaderButton, Text } from '@react-navigation/elements';
 import {
@@ -14,7 +15,8 @@ import { Settings } from './screens/Settings';
 import { Updates } from './screens/Updates';
 import { NotFound } from './screens/NotFound';
 import { SignInScreen } from './screens/SignInScreen';
-import { useAuth } from '../context/AuthContext';
+import { OnboardingScreen } from './screens/Onboarding';
+import { useAuthContext } from '../context/AuthContext';
 import { ComponentProps } from 'react';
 
 // Create navigators using the traditional method
@@ -102,15 +104,23 @@ function RootStack() {
   );
 }
 
+// 初回起動かどうかの判定は本来はストレージ等で管理するが、ここでは仮実装
+const isFirstLaunch = true; // TODO: AsyncStorage等で判定
+
 function AuthStack() {
   return (
     <AuthStackNavigator.Navigator>
+      {isFirstLaunch && (
+        <AuthStackNavigator.Screen
+          name="Onboarding"
+          component={OnboardingScreen}
+          options={{ headerShown: false }}
+        />
+      )}
       <AuthStackNavigator.Screen
         name="SignIn"
         component={SignInScreen}
-        options={{
-          headerShown: false,
-        }}
+        options={{ headerShown: false }}
       />
     </AuthStackNavigator.Navigator>
   );
@@ -119,11 +129,11 @@ function AuthStack() {
 export function Navigation(
   props: Omit<ComponentProps<typeof NavigationContainer>, 'children'>
 ) {
-  const { isAuthenticated } = useAuth();
+  const { isLoggedIn } = useAuthContext();
 
   return (
     <NavigationContainer {...props}>
-      {isAuthenticated ? <RootStack /> : <AuthStack />}
+      {isLoggedIn ? <RootStack /> : <AuthStack />}
     </NavigationContainer>
   );
 }

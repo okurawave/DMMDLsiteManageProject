@@ -3,6 +3,8 @@ GitHub Copilot（ChatやCLIなど）がプロジェクトの文脈を深く理�
 
 このファイルは、AIにプロジェクトの「憲法」と「設計思想」を教え込むためのものです。
 
+issueごとに新しいブランチを切って終わったらprを出すようにしてください。
+
 ---
 
 ### **`.github/copilot/instructions.md`**
