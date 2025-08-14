@@ -7,18 +7,23 @@ export const getDatabase = () => {
   return SQLite.openDatabase(DB_NAME);
 };
 
-export const initDatabase = async () => {
+export const initDatabase = (): Promise<void> => {
   const db = getDatabase();
-  // 必要なテーブル作成例
-  db.transaction(tx => {
-    tx.executeSql(
-      `CREATE TABLE IF NOT EXISTS works (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT NOT NULL,
-        tags TEXT,
-        createdAt TEXT,
-        updatedAt TEXT
-      );`
+  return new Promise((resolve, reject) => {
+    db.transaction(
+      tx => {
+        tx.executeSql(
+          `CREATE TABLE IF NOT EXISTS works (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            tags TEXT,
+            createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+            updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
+          );`
+        );
+      },
+      error => reject(error),
+      () => resolve()
     );
   });
 };
