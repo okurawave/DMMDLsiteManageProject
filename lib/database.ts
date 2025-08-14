@@ -9,7 +9,7 @@ export const getDatabase = () => {
 };
 
 export const initDatabase = async (): Promise<void> => {
-  await db.transactionAsync(async (tx: SQLite.SQLTransactionAsync) => {
+  await db.transactionAsync(async (tx: SQLite.SQLiteTransactionAsync) => {
     await tx.executeSqlAsync(
       `CREATE TABLE IF NOT EXISTS works (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
