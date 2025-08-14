@@ -19,15 +19,17 @@ export const listFiles = async (accessToken: string): Promise<DriveFile[]> => {
 };
 
 
-export const uploadFile = async (accessToken: string, name: string, content: string): Promise<string> => {
+
+export const uploadFile = async (accessToken: string, name: string, content: string | Blob): Promise<string> => {
   // TODO: Google Drive API呼び出し実装
   return 'mock-file-id';
 };
 
 
-export const downloadFile = async (accessToken: string, fileId: string): Promise<string> => {
+
+export const downloadFile = async (accessToken: string, fileId: string): Promise<Blob> => {
   // TODO: Google Drive API呼び出し実装
-  return '';
+  return new Blob();
 };
 
 
