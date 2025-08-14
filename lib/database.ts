@@ -9,11 +9,7 @@ export const getDatabase = () => {
 
 export const initDatabase = async (): Promise<void> => {
   const db = getDatabase();
-  // expo-sqliteのtransactionAsync/executeSqlAsyncを利用
-  // 型定義がない場合はanyで回避
-  // @ts-ignore
-  await db.transactionAsync(async (tx: any) => {
-    // @ts-ignore
+  await db.transactionAsync(async (tx: SQLite.SQLiteTransactionAsync) => {
     await tx.executeSqlAsync(
       `CREATE TABLE IF NOT EXISTS works (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -23,7 +19,6 @@ export const initDatabase = async (): Promise<void> => {
         updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
       );`
     );
-    // @ts-ignore
     await tx.executeSqlAsync(
       `CREATE TRIGGER IF NOT EXISTS update_works_updatedAt
         AFTER UPDATE ON works FOR EACH ROW

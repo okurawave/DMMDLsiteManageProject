@@ -40,11 +40,24 @@ export const uploadFile = async (
   return 'mock-file-id';
 };
 
+
+/**
+ * Google Driveからファイルをダウンロード
+ * @param accessToken Google OAuthアクセストークン
+ * @param fileId ファイルID
+ * @returns ファイルのBlobデータ
+ */
 export const downloadFile = async (accessToken: string, fileId: string): Promise<Blob> => {
   // TODO: Google Drive API呼び出し実装
   return new Blob();
 };
 
+
+/**
+ * Google Drive上のファイルを削除
+ * @param accessToken Google OAuthアクセストークン
+ * @param fileId ファイルID
+ */
 export const deleteFile = async (accessToken: string, fileId: string): Promise<void> => {
   // TODO: Google Drive API呼び出し実装
 };
