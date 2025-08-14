@@ -2,8 +2,6 @@
 // サーバーレス前提。expo-auth-session等で取得したアクセストークンを利用。
 // ファイル操作（作成・取得・更新・削除）用の関数を提供
 
-
-
 export type DriveFile = {
   id: string;
   name: string;
@@ -18,20 +16,19 @@ export const listFiles = async (accessToken: string): Promise<DriveFile[]> => {
   return [];
 };
 
-
-
-export const uploadFile = async (accessToken: string, name: string, content: string | Blob): Promise<string> => {
+export const uploadFile = async (
+  accessToken: string,
+  name: string,
+  content: string | Blob,
+): Promise<string> => {
   // TODO: Google Drive API呼び出し実装
   return 'mock-file-id';
 };
-
-
 
 export const downloadFile = async (accessToken: string, fileId: string): Promise<Blob> => {
   // TODO: Google Drive API呼び出し実装
   return new Blob();
 };
-
 
 export const deleteFile = async (accessToken: string, fileId: string): Promise<void> => {
   // TODO: Google Drive API呼び出し実装

@@ -24,6 +24,7 @@ export const initDatabase = (): Promise<void> => {
         tx.executeSql(
           `CREATE TRIGGER IF NOT EXISTS update_works_updatedAt
             AFTER UPDATE ON works FOR EACH ROW
+            WHEN NEW.updatedAt = OLD.updatedAt
             BEGIN
                 UPDATE works SET updatedAt = CURRENT_TIMESTAMP WHERE id = OLD.id;
             END;`
