@@ -1,52 +1,33 @@
 import { Text, View, StyleSheet, Image, useColorScheme, TouchableOpacity, Linking, Alert, Platform } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { useEffect } from 'react';
-
-// Conditional import for Google Sign-in (only for native platforms)
-let GoogleSignin: any = null;
-let statusCodes: any = null;
-
-if (Platform.OS !== 'web') {
-  try {
-    const googleSigninModule = require('@react-native-google-signin/google-signin');
-    GoogleSignin = googleSigninModule.GoogleSignin;
-    statusCodes = googleSigninModule.statusCodes;
-  } catch (e) {
-    console.warn('Google Sign-in module not available');
-  }
-}
-
-// It's better to manage assets from a central place.
-let googleSignInButtonDark: any = null;
-let googleSignInButtonLight: any = null;
-let appIcon: any = null;
-
-if (Platform.OS !== 'web') {
-  try {
-    googleSignInButtonDark = require('../../assets/google_signin/dark.png');
-    googleSignInButtonLight = require('../../assets/google_signin/ios_light_rd_SI@4x.png');
-    appIcon = require('../../../assets/icon.png');
-  } catch (e) {
-    console.warn('Assets not available:', e);
-  }
-}
-
+import { useGoogleAuth } from '../../hooks/useGoogleAuth';
 export function SignInScreen() {
-  const { signIn } = useAuth();
+  // アセットの管理
+  let googleSignInButtonDark: any = null;
+  let googleSignInButtonLight: any = null;
+  let appIcon: any = null;
+  if (Platform.OS !== 'web') {
+    try {
+      googleSignInButtonDark = require('../../assets/google_signin/dark.png');
+      googleSignInButtonLight = require('../../assets/google_signin/ios_light_rd_SI@4x.png');
+      appIcon = require('../../../assets/icon.png');
+    } catch (e) {
+      console.warn('Assets not available:', e);
+    }
+  }
+
+  const { signIn: setAuth } = useAuth();
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
+  const { signIn: googleSignIn, user, loading, error } = useGoogleAuth();
 
+  // Google認証成功時にグローバルストアへ反映
   useEffect(() => {
-    if (Platform.OS !== 'web' && GoogleSignin) {
-      GoogleSignin.configure({
-        // **************************************************************************************************
-        // * IMPORTANT: REPLACE WITH YOUR WEB CLIENT ID FROM GOOGLE CLOUD CONSOLE
-        // **************************************************************************************************
-        webClientId: 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com',
-        offlineAccess: true,
-      });
+    if (user) {
+      setAuth(); // 必要に応じてsetAuth(user)などに拡張
     }
-  }, []);
+  }, [user]);
 
   const styles = StyleSheet.create({
     container: {
@@ -89,43 +70,8 @@ export function SignInScreen() {
 
   const googleButton = isDarkMode ? googleSignInButtonDark : googleSignInButtonLight;
 
-  const handleSignIn = async () => {
-    if (Platform.OS === 'web') {
-      // For web, use a simple mock sign-in
-      Alert.alert('Web Sign-in', 'Google Sign-in is not available on web. Using mock sign-in.', [
-        { text: 'OK', onPress: () => signIn() }
-      ]);
-      return;
-    }
-
-    if (!GoogleSignin) {
-      Alert.alert('Error', 'Google Sign-in is not available');
-      return;
-    }
-
-    try {
-      await GoogleSignin.hasPlayServices();
-      const userInfo = await GoogleSignin.signIn();
-      // At this point, you can get the user info from `userInfo`
-      // and send it to your backend for verification, etc.
-      console.log(JSON.stringify(userInfo, null, 2));
-      signIn();
-    } catch (error: any) {
-      if (statusCodes && error.code === statusCodes.SIGN_IN_CANCELLED) {
-        // user cancelled the login flow
-        console.log('User cancelled the login flow');
-      } else if (statusCodes && error.code === statusCodes.IN_PROGRESS) {
-        // operation (e.g. sign in) is in progress already
-        console.log('Sign in is in progress');
-      } else if (statusCodes && error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-        // play services not available or outdated
-        Alert.alert('Error', 'Play services not available or outdated');
-      } else {
-        // some other error happened
-        Alert.alert('Error', 'An unknown error occurred during sign-in.');
-        console.error(error);
-      }
-    }
+  const handleSignIn = () => {
+    googleSignIn();
   };
 
   const openLink = (url: string) => {
@@ -139,17 +85,34 @@ export function SignInScreen() {
         <Text style={styles.appName}>My Doujin Vault</Text>
       </View>
 
-      <TouchableOpacity onPress={handleSignIn}>
-        {googleButton && Platform.OS !== 'web' ? (
-          <Image source={googleButton} style={styles.signInButton} />
-        ) : (
-          <View style={[styles.signInButton, { backgroundColor: '#4285f4', justifyContent: 'center', alignItems: 'center' }]}>
-            <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold' }}>
-              {Platform.OS === 'web' ? 'Sign in with Google (Web)' : 'Sign in with Google'}
-            </Text>
+      <TouchableOpacity onPress={handleSignIn} disabled={loading}>
+        {loading ? (
+          <View style={[styles.signInButton, { justifyContent: 'center', alignItems: 'center', backgroundColor: '#ccc' }]}> 
+            <Text style={{ color: '#666', fontSize: 16 }}>Signing in...</Text>
           </View>
+        ) : (
+          googleButton && Platform.OS !== 'web' ? (
+            <Image source={googleButton} style={styles.signInButton} />
+          ) : (
+            <View style={[styles.signInButton, { backgroundColor: '#4285f4', justifyContent: 'center', alignItems: 'center' }]}> 
+              <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold' }}>
+                {Platform.OS === 'web' ? 'Sign in with Google (Web)' : 'Sign in with Google'}
+              </Text>
+            </View>
+          )
         )}
       </TouchableOpacity>
+
+      {error && (
+        <Text style={{ color: 'red', marginTop: 10 }}>{error}</Text>
+      )}
+
+      {user && (
+        <View style={{ marginTop: 20, alignItems: 'center' }}>
+          <Text>Welcome, {user.name}</Text>
+          <Text style={{ fontSize: 12, color: '#666' }}>{user.email}</Text>
+        </View>
+      )}
 
       <View style={styles.footerContainer}>
         <Text style={styles.footerLink} onPress={() => openLink('https://example.com/privacy')}>
