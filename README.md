@@ -33,11 +33,11 @@ MIT License
 
 ## プロジェクト概要
 
-概要は docs/overview.md を参照: [`docs/overview.md`](docs/overview.md:1)
+概要は docs/overview.md を参照: [`docs/overview.md`](docs/overview.md)
 
 ## アーキテクチャ
 
-アーキテクチャ要点: [`docs/architecture.md`](docs/architecture.md:1)
+アーキテクチャ要点: [`docs/architecture.md`](docs/architecture.md)
 
 ## 開発開始手順
 
