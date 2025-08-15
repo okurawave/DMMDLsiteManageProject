@@ -2,6 +2,7 @@
 // 既存の作品データから作者・サークル初期データを生成する
 import { getDatabase } from '../../../lib/database';
 import type { Work, Author, Circle } from '../types/index';
+import type { Transaction } from '../../../lib/expo-sqlite';
 
 /**
  * 作品テーブルから作者・サークル名を抽出し、名簿テーブルへ初期登録する
@@ -18,12 +19,19 @@ export async function migrateToDetailMode() {
   const circleNames = Array.from(new Set(works.map(w => w.circleName).filter(Boolean)));
 
   // 作者・サークル名簿への一括insert
-  await db.transactionAsync(async (tx: any) => {
-    for (const name of authorNames) {
-      await tx.executeSqlAsync('INSERT OR IGNORE INTO authors (name) VALUES (?)', [name]);
-    }
-    for (const name of circleNames) {
-      await tx.executeSqlAsync('INSERT OR IGNORE INTO circles (name) VALUES (?)', [name]);
-    }
+  await new Promise<void>((resolve, reject) => {
+  db.transaction((tx: Transaction) => {
+      try {
+        for (const name of authorNames) {
+          tx.executeSql('INSERT OR IGNORE INTO authors (name) VALUES (?)', [name]);
+        }
+        for (const name of circleNames) {
+          tx.executeSql('INSERT OR IGNORE INTO circles (name) VALUES (?)', [name]);
+        }
+        resolve();
+      } catch (err) {
+        reject(err);
+      }
+    });
   });
 }
