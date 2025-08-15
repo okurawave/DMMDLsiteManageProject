@@ -27,11 +27,11 @@
 - Google DriveクライアントサービスやSQLite初期化は未実装。
 
 ## チェックリスト
-- [ ] Google Drive APIクライアント（`services/driveService.ts`）を実装し、ファイル操作関数を提供
-- [ ] Expo-SQLiteでローカルDBを初期化するユーティリティ（`lib/database.ts`）を作成
-- [ ] React Nativeアプリの環境設定（`app.json`, `tsconfig.json`, ESLint/Prettier設定）を確立
-- [ ] ファイルベースルーティング（Expo Router）のディレクトリ構成を整理 (`app/`ディレクトリ)
-- [ ] プロジェクトルートにDockerfileやCI設定が必要か検討し、ドキュメント化
+- [x] Google Drive APIクライアント（`services/driveService.ts`）を実装し、ファイル操作関数を提供
+- [x] Expo-SQLiteでローカルDBを初期化するユーティリティ（`lib/database.ts`）を作成
+- [x] React Nativeアプリの環境設定（`app.json`, `tsconfig.json`, ESLint/Prettier設定）を確立
+- [x] ファイルベースルーティング（Expo Router）のディレクトリ構成を整理 (`app/`ディレクトリ)
+- [x] プロジェクトルートにDockerfileやCI設定が必要か検討し、ドキュメント化
 
 ## 完了条件
 - クライアントアプリとGoogle Drive、ローカルDBの基本構成が動作検証できる状態となっている

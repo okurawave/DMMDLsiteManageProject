@@ -8,7 +8,7 @@ export function Settings() {
   const { mode, setMode } = useModeStore();
   return (
     <View style={styles.container}>
-      <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 16 }}>管理モード</Text>
+      <Text style={styles.title}>管理モード</Text>
       <View style={styles.row}>
         <TouchableOpacity onPress={() => setMode('simple')} style={[styles.radio, mode === 'simple' && styles.selected]}> 
           <Text>シンプルモード</Text>
@@ -17,7 +17,7 @@ export function Settings() {
           <Text>詳細モード</Text>
         </TouchableOpacity>
       </View>
-      <Text style={{ marginTop: 16, color: '#666' }}>
+      <Text style={styles.infoText}>
         現在: {mode === 'simple' ? 'シンプルモード（基本情報のみ）' : '詳細モード（作者・サークル管理）'}
       </Text>
     </View>
@@ -50,5 +50,14 @@ const styles = StyleSheet.create({
     borderColor: '#4285f4',
     shadowColor: '#4285f4',
     shadowOpacity: 0.2,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  infoText: {
+    marginTop: 16,
+    color: '#666',
   },
 });
