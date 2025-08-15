@@ -1,4 +1,5 @@
 import { useAuthRequest, makeRedirectUri, ResponseType, DiscoveryDocument } from 'expo-auth-session';
+import Constants from 'expo-constants';
 import { useCallback, useEffect, useState } from 'react';
 
 const discovery: DiscoveryDocument = {
@@ -19,7 +20,10 @@ export function useGoogleAuth() {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
-	const clientId = 'YOUR_CLIENT_ID.apps.googleusercontent.com'; // TODO: 実際のクライアントIDに置換
+
+	const clientId = Constants.expoConfig?.extra?.GOOGLE_WEB_CLIENT_ID;
+	console.log('Google Client ID:', clientId);
+	console.log('Redirect URI:', makeRedirectUri());
 
 	const [request, response, promptAsync] = useAuthRequest(
 		{

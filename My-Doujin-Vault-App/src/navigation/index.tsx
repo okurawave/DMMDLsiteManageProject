@@ -22,7 +22,11 @@ import { ComponentProps } from 'react';
 // Create navigators using the traditional method
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
-const AuthStackNavigator = createNativeStackNavigator();
+export type AuthStackParamList = {
+  Onboarding: undefined;
+  SignIn: undefined;
+};
+const AuthStackNavigator = createNativeStackNavigator<AuthStackParamList>();
 
 function HomeTabs() {
   return (
@@ -131,9 +135,10 @@ export function Navigation(
 ) {
   const { isLoggedIn } = useAuthContext();
 
+  const skipAuth = true; // TODO: Google認証・Drive連携一時スキップ
   return (
     <NavigationContainer {...props}>
-      {isLoggedIn ? <RootStack /> : <AuthStack />}
+      {skipAuth || isLoggedIn ? <RootStack /> : <AuthStack />}
     </NavigationContainer>
   );
 }
