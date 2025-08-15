@@ -11,45 +11,19 @@ import type { Work, Author, Circle } from '../types/index';
 export async function migrateToDetailMode() {
   const db = getDatabase();
   // 作品一覧取得
-  const works: Work[] = await new Promise((resolve, reject) => {
-    db.transaction((tx: any) => {
-      tx.executeSql(
-        'SELECT * FROM works',
-        [],
-        (_: any, result: any) => resolve(result.rows._array),
-        (_: any, err: any) => { reject(err); return false; }
-      );
-    });
-  });
+  const works: Work[] = await db.getAllAsync<Work>('SELECT * FROM works');
 
   // 作者・サークル名のユニーク抽出
   const authorNames = Array.from(new Set(works.map(w => w.authorName).filter(Boolean)));
   const circleNames = Array.from(new Set(works.map(w => w.circleName).filter(Boolean)));
 
-  // 作者名簿へinsert
-  for (const name of authorNames) {
-    await new Promise((resolve, reject) => {
-      db.transaction((tx: any) => {
-        tx.executeSql(
-          'INSERT OR IGNORE INTO authors (name) VALUES (?)',
-          [name],
-          () => resolve(true),
-          (_: any, err: any) => { reject(err); return false; }
-        );
-      });
-    });
-  }
-  // サークル名簿へinsert
-  for (const name of circleNames) {
-    await new Promise((resolve, reject) => {
-      db.transaction((tx: any) => {
-        tx.executeSql(
-          'INSERT OR IGNORE INTO circles (name) VALUES (?)',
-          [name],
-          () => resolve(true),
-          (_: any, err: any) => { reject(err); return false; }
-        );
-      });
-    });
-  }
+  // 作者・サークル名簿への一括insert
+  await db.transactionAsync(async (tx: any) => {
+    for (const name of authorNames) {
+      await tx.executeSqlAsync('INSERT OR IGNORE INTO authors (name) VALUES (?)', [name]);
+    }
+    for (const name of circleNames) {
+      await tx.executeSqlAsync('INSERT OR IGNORE INTO circles (name) VALUES (?)', [name]);
+    }
+  });
 }

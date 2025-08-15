@@ -6,20 +6,27 @@ export type Mode = 'simple' | 'detail';
 
 interface ModeState {
   mode: Mode;
-  setMode: (mode: Mode) => void;
+  setMode: (mode: Mode) => Promise<void>;
   hydrate: () => Promise<void>;
 }
 
 export const useModeStore = create<ModeState>((set) => ({
   mode: 'simple',
   setMode: async (mode) => {
+    const currentMode = useModeStore.getState().mode;
     // シンプル→詳細モードに切り替える時のみマイグレーション実行 (ネイティブのみ)
-    if (mode === 'detail' && Platform.OS !== 'web') {
-      const { migrateToDetailMode } = await import('../migration/modeMigration');
-      await migrateToDetailMode();
+    if (mode === 'detail' && currentMode === 'simple' && Platform.OS !== 'web') {
+      try {
+        const { migrateToDetailMode } = await import('../migration/modeMigration');
+        await migrateToDetailMode();
+      } catch (error) {
+        console.error('Migration to detail mode failed:', error);
+        // マイグレーション失敗時はモードを変更しない
+        return;
+      }
     }
     set({ mode });
-    AsyncStorage.setItem('mode', mode);
+    await AsyncStorage.setItem('mode', mode);
   },
   hydrate: async () => {
     const saved = await AsyncStorage.getItem('mode');

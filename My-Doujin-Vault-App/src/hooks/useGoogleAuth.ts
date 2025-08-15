@@ -22,8 +22,6 @@ export function useGoogleAuth() {
 
 
 	const clientId = Constants.expoConfig?.extra?.GOOGLE_WEB_CLIENT_ID;
-	console.log('Google Client ID:', clientId);
-	console.log('Redirect URI:', makeRedirectUri());
 
 	const [request, response, promptAsync] = useAuthRequest(
 		{
