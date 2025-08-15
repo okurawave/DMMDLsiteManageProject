@@ -135,10 +135,9 @@ export function Navigation(
 ) {
   const { isLoggedIn } = useAuthContext();
 
-  const skipAuth = true; // TODO: Google認証・Drive連携一時スキップ
   return (
     <NavigationContainer {...props}>
-      {skipAuth || isLoggedIn ? <RootStack /> : <AuthStack />}
+      {isLoggedIn ? <RootStack /> : <AuthStack />}
     </NavigationContainer>
   );
 }
