@@ -1,10 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { HeaderButton, Text } from '@react-navigation/elements';
-import {
-  NavigationContainer,
-  StaticParamList,
-} from '@react-navigation/native';
+import { NavigationContainer, StaticParamList } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Image } from 'react-native';
 import bell from '../assets/bell.png';
@@ -130,9 +127,7 @@ function AuthStack() {
   );
 }
 
-export function Navigation(
-  props: Omit<ComponentProps<typeof NavigationContainer>, 'children'>
-) {
+export function Navigation(props: Omit<ComponentProps<typeof NavigationContainer>, 'children'>) {
   const { isLoggedIn } = useAuthContext();
 
   // 開発用: Google認証・Drive連携をスキップしたい場合はtrueに

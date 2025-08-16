@@ -2,7 +2,7 @@
 
 > 「あなたのコレクションを、あなたの手に取り戻す。」  
 > 複数のプラットフォームに散在するデジタル同人コンテンツの書誌情報を、ユーザー自身の管理下に一元化する。  
-参照: [`docs/MyDoujinVault.md`](docs/MyDoujinVault.md)
+> 参照: [`docs/MyDoujinVault.md`](docs/MyDoujinVault.md)
 
 ## エントリポイント
 

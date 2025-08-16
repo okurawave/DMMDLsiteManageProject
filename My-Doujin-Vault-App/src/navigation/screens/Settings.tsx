@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Text } from '@react-navigation/elements';
 import { StyleSheet, View, TouchableOpacity } from 'react-native';
@@ -10,15 +9,22 @@ export function Settings() {
     <View style={styles.container}>
       <Text style={styles.title}>管理モード</Text>
       <View style={styles.row}>
-        <TouchableOpacity onPress={() => setMode('simple')} style={[styles.radio, mode === 'simple' && styles.selected]}> 
+        <TouchableOpacity
+          onPress={() => setMode('simple')}
+          style={[styles.radio, mode === 'simple' && styles.selected]}
+        >
           <Text>シンプルモード</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => setMode('detail')} style={[styles.radio, mode === 'detail' && styles.selected]}> 
+        <TouchableOpacity
+          onPress={() => setMode('detail')}
+          style={[styles.radio, mode === 'detail' && styles.selected]}
+        >
           <Text>詳細モード</Text>
         </TouchableOpacity>
       </View>
       <Text style={styles.infoText}>
-        現在: {mode === 'simple' ? 'シンプルモード（基本情報のみ）' : '詳細モード（作者・サークル管理）'}
+        現在:{' '}
+        {mode === 'simple' ? 'シンプルモード（基本情報のみ）' : '詳細モード（作者・サークル管理）'}
       </Text>
     </View>
   );

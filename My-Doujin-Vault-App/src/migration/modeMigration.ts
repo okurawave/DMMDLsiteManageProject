@@ -11,16 +11,40 @@ import type { Transaction } from '../../../lib/expo-sqlite';
  */
 export async function migrateToDetailMode() {
   const db = getDatabase();
-  // 作品一覧取得
-  const works: Work[] = await db.getAllAsync<Work>('SELECT * FROM works');
+  // 作品一覧取得 — getAllAsync が未定義の場合はトランザクションでフェッチするフォールバックを使用
+  let works: Work[] = [];
+  if (typeof (db as any).getAllAsync === 'function') {
+    works = (await (db as any).getAllAsync('SELECT * FROM works')) as Work[];
+  } else {
+    works = await new Promise<Work[]>((resolve, reject) => {
+      try {
+        db.transaction((tx: Transaction) => {
+          tx.executeSql(
+            'SELECT * FROM works',
+            [],
+            (_tx, result) => {
+              const rows = (result as any)?.rows?._array ?? [];
+              resolve(rows as Work[]);
+            },
+            (_tx, err) => {
+              reject(err);
+              return true;
+            },
+          );
+        });
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
 
   // 作者・サークル名のユニーク抽出
-  const authorNames = Array.from(new Set(works.map(w => w.authorName).filter(Boolean)));
-  const circleNames = Array.from(new Set(works.map(w => w.circleName).filter(Boolean)));
+  const authorNames = Array.from(new Set(works.map((w) => w.authorName).filter(Boolean)));
+  const circleNames = Array.from(new Set(works.map((w) => w.circleName).filter(Boolean)));
 
   // 作者・サークル名簿への一括insert
   await new Promise<void>((resolve, reject) => {
-  db.transaction((tx: Transaction) => {
+    db.transaction((tx: Transaction) => {
       try {
         for (const name of authorNames) {
           tx.executeSql('INSERT OR IGNORE INTO authors (name) VALUES (?)', [name]);

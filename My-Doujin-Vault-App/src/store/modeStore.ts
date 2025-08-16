@@ -23,7 +23,10 @@ export const useModeStore = create<ModeState>((set) => ({
       } catch (error) {
         console.error('Migration to detail mode failed:', error);
         // ユーザーにエラーを通知
-        Alert.alert('移行エラー', '詳細モードへの移行中にエラーが発生しました。操作は中止されました。');
+        Alert.alert(
+          '移行エラー',
+          '詳細モードへの移行中にエラーが発生しました。操作は中止されました。',
+        );
         // マイグレーション失敗時はモードを変更しない
         return;
       }

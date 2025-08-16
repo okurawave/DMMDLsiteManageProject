@@ -6,7 +6,8 @@
     "start": "expo start --dev-client",
     "web": "expo start --web",
     "android": "expo run:android",
-    "ios": "expo run:ios"
+    "ios": "expo run:ios",
+    "lint": "eslint \"./**/*.{ts,tsx}\" --max-warnings=0 --no-error-on-unmatched-pattern"
   },
   "dependencies": {
     "@expo/metro-runtime": "~5.0.4",
@@ -38,6 +39,14 @@
     "@babel/core": "^7.20.0",
     "@types/react": "~19.0.10",
     "@types/react-native": "^0.72.8",
+    "@typescript-eslint/eslint-plugin": "^8.39.1",
+    "@typescript-eslint/parser": "^8.39.1",
+    "eslint": "^8.57.1",
+    "eslint-config-expo": "^9.2.0",
+    "eslint-config-prettier": "^9.1.2",
+    "eslint-import-resolver-typescript": "^3.7.0",
+    "eslint-plugin-import": "^2.28.1",
+    "eslint-plugin-react": "^7.33.0",
     "typescript": "~5.8.3"
   },
   "private": true
