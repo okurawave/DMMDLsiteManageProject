@@ -19,7 +19,11 @@ export const initDatabase = async (): Promise<void> => {
           `CREATE TABLE IF NOT EXISTS works (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title TEXT NOT NULL,
+            authorName TEXT,
+            circleName TEXT,
             tags TEXT,
+            purchaseDate TEXT,
+            rating INTEGER,
             createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
             updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
           );`
@@ -37,7 +41,11 @@ export const initDatabase = async (): Promise<void> => {
           `CREATE TABLE IF NOT EXISTS works (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title TEXT NOT NULL,
+            authorName TEXT,
+            circleName TEXT,
             tags TEXT,
+            purchaseDate TEXT,
+            rating INTEGER,
             createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
             updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
           );`
@@ -64,7 +72,11 @@ export const initDatabase = async (): Promise<void> => {
             `CREATE TABLE IF NOT EXISTS works (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               title TEXT NOT NULL,
+              authorName TEXT,
+              circleName TEXT,
               tags TEXT,
+              purchaseDate TEXT,
+              rating INTEGER,
               createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
               updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
             );`
