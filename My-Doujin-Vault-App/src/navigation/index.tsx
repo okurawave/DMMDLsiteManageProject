@@ -130,8 +130,10 @@ function AuthStack() {
 export function Navigation(props: Omit<ComponentProps<typeof NavigationContainer>, 'children'>) {
   const { isLoggedIn } = useAuthContext();
 
-  // 開発用: Google認証・Drive連携をスキップしたい場合はtrueに
-  const skipAuth = true;
+  // 開発用: Google認証・Drive連携をスキップするかは環境変数 SKIP_AUTH を使用
+  // .env に SKIP_AUTH=true/false を入れて切り替え（※.env の秘密情報はコミットしないこと）
+  // デフォルトは false（= 認証画面を表示）
+  const skipAuth = process.env.SKIP_AUTH === 'true';
   return (
     <NavigationContainer {...props}>
       {skipAuth || isLoggedIn ? <RootStack /> : <AuthStack />}
