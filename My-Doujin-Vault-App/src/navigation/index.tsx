@@ -1,10 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { HeaderButton, Text } from '@react-navigation/elements';
-import {
-  NavigationContainer,
-  StaticParamList,
-} from '@react-navigation/native';
+import { NavigationContainer, StaticParamList } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Image } from 'react-native';
 import bell from '../assets/bell.png';
@@ -22,7 +19,11 @@ import { ComponentProps } from 'react';
 // Create navigators using the traditional method
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
-const AuthStackNavigator = createNativeStackNavigator();
+export type AuthStackParamList = {
+  Onboarding: undefined;
+  SignIn: undefined;
+};
+const AuthStackNavigator = createNativeStackNavigator<AuthStackParamList>();
 
 function HomeTabs() {
   return (
@@ -126,14 +127,16 @@ function AuthStack() {
   );
 }
 
-export function Navigation(
-  props: Omit<ComponentProps<typeof NavigationContainer>, 'children'>
-) {
+export function Navigation(props: Omit<ComponentProps<typeof NavigationContainer>, 'children'>) {
   const { isLoggedIn } = useAuthContext();
 
+  // 開発用: Google認証・Drive連携をスキップするかは環境変数 SKIP_AUTH を使用
+  // .env に SKIP_AUTH=true/false を入れて切り替え（※.env の秘密情報はコミットしないこと）
+  // デフォルトは false（= 認証画面を表示）
+  const skipAuth = process.env.SKIP_AUTH === 'true';
   return (
     <NavigationContainer {...props}>
-      {isLoggedIn ? <RootStack /> : <AuthStack />}
+      {skipAuth || isLoggedIn ? <RootStack /> : <AuthStack />}
     </NavigationContainer>
   );
 }

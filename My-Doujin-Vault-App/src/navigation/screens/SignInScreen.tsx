@@ -1,4 +1,14 @@
-import { Text, View, StyleSheet, Image, useColorScheme, TouchableOpacity, Linking, Alert, Platform } from 'react-native';
+import {
+  Text,
+  View,
+  StyleSheet,
+  Image,
+  useColorScheme,
+  TouchableOpacity,
+  Linking,
+  Alert,
+  Platform,
+} from 'react-native';
 import { useAuthContext } from '../../context/AuthContext';
 import { useEffect } from 'react';
 import { useGoogleAuth } from '../../hooks/useGoogleAuth';
@@ -79,7 +89,7 @@ export function SignInScreen() {
   };
 
   const openLink = (url: string) => {
-    Linking.openURL(url).catch(err => console.error("Couldn't load page", err));
+    Linking.openURL(url).catch((err) => console.error("Couldn't load page", err));
   };
 
   return (
@@ -91,25 +101,31 @@ export function SignInScreen() {
 
       <TouchableOpacity onPress={handleSignIn} disabled={loading}>
         {loading ? (
-          <View style={[styles.signInButton, { justifyContent: 'center', alignItems: 'center', backgroundColor: '#ccc' }]}> 
+          <View
+            style={[
+              styles.signInButton,
+              { justifyContent: 'center', alignItems: 'center', backgroundColor: '#ccc' },
+            ]}
+          >
             <Text style={{ color: '#666', fontSize: 16 }}>Signing in...</Text>
           </View>
+        ) : googleButton && Platform.OS !== 'web' ? (
+          <Image source={googleButton} style={styles.signInButton} />
         ) : (
-          googleButton && Platform.OS !== 'web' ? (
-            <Image source={googleButton} style={styles.signInButton} />
-          ) : (
-            <View style={[styles.signInButton, { backgroundColor: '#4285f4', justifyContent: 'center', alignItems: 'center' }]}> 
-              <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold' }}>
-                {Platform.OS === 'web' ? 'Sign in with Google (Web)' : 'Sign in with Google'}
-              </Text>
-            </View>
-          )
+          <View
+            style={[
+              styles.signInButton,
+              { backgroundColor: '#4285f4', justifyContent: 'center', alignItems: 'center' },
+            ]}
+          >
+            <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold' }}>
+              {Platform.OS === 'web' ? 'Sign in with Google (Web)' : 'Sign in with Google'}
+            </Text>
+          </View>
         )}
       </TouchableOpacity>
 
-      {error && (
-        <Text style={{ color: 'red', marginTop: 10 }}>{error}</Text>
-      )}
+      {error && <Text style={{ color: 'red', marginTop: 10 }}>{error}</Text>}
 
       {user && (
         <View style={{ marginTop: 20, alignItems: 'center' }}>

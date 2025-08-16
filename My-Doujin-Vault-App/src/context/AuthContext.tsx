@@ -6,7 +6,6 @@ export type AuthContextType = AuthState;
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const store = useAuthStore();
   useEffect(() => {
@@ -14,7 +13,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
   return <AuthContext.Provider value={store}>{children}</AuthContext.Provider>;
 };
-
 
 export const useAuthContext = () => {
   const ctx = useContext(AuthContext);

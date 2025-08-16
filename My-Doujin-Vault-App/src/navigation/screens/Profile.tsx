@@ -1,4 +1,3 @@
-
 import { Text } from '@react-navigation/elements';
 import { StyleSheet, View } from 'react-native';
 

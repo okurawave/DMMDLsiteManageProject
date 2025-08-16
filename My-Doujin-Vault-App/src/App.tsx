@@ -23,8 +23,14 @@ const prefix = createURL('/');
 export function App() {
   const colorScheme = useColorScheme();
 
-  const theme = colorScheme === 'dark' ? DarkTheme : DefaultTheme
+  const theme = colorScheme === 'dark' ? DarkTheme : DefaultTheme;
 
+  React.useEffect(() => {
+    // 起動時に管理モードの永続化データを復元
+    import('./store/modeStore').then(({ useModeStore }) => {
+      useModeStore.getState().hydrate();
+    });
+  }, []);
   return (
     <AuthProvider>
       <Navigation
