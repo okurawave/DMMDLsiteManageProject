@@ -14,7 +14,7 @@
 - まだSQLiteによるデータ永続化サービスは実装されていません。
 - CRUD画面（作品一覧、登録フォーム、詳細画面）は未作成です。
 
-## チェックリスト
+-## チェックリスト
 - [ ] Expo-SQLiteを用いて`works`テーブルのスキーマ設計・初期化処理を実装
 - [ ] `services/workService.ts`を作成し、以下の関数を実装
   - `addWork(work: Omit<Work, 'id' | 'createdAt' | 'updatedAt'>)`
@@ -32,8 +32,8 @@
   - 編集モード遷移
   - 削除時の確認ダイアログ
 - [ ] GlobalContextまたはZustandでCRUDロジックと画面遷移を連携
-- [ ] Google Drive同期との連動（登録・更新・削除後に同期処理をキック）
+- [ ] Google Drive同期との連動（登録・更新・削除後に同期処理をキック） — 将来的項目。詳細は `issue14` に移設し、当面はローカル完結を優先する。
 - [ ] 単体テスト（Jest + React Native Testing Library）を追加
 
 ## 完了条件
-- 上記チェックリストの全項目が実装され、作品の登録・閲覧・編集・削除がローカルDBおよびGoogle Drive同期を通じて正しく動作すること。
+- ローカルDB上での作品の登録・閲覧・編集・削除が正常に動作すること（Google Drive同期は `issue14` で別途検討）。
